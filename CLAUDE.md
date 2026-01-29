@@ -21,6 +21,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `abc0fc1` | INI ファイルのコメントを日本語化 |
 | `35bc05d` | INI コメントの日本語化改善、デフォルト値変更（IniEditor→system、NavigateWithMouseWheel→true） |
 | `c97922f` | サードパーティライブラリ更新: libjpeg-turbo 3.1.3, libpng 1.6.54 (APNG パッチ対応), zlib 1.3.1.2, libwebp 1.6.0, libjxl 0.11.1, libheif 1.21.2, dav1d 1.5.3, LibRaw 0.22.0, lcms2 2.18 |
+| `5715140` | パフォーマンス最適化: スレッド数拡大（16→64）、AVIF デコーダ最適化、mimalloc 統合 |
 
 ### サードパーティライブラリ バージョン比較
 
@@ -48,6 +49,62 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **命令セット**: Release|x64 で `/arch:AVX2` 有効
 
 サードパーティライブラリの再ビルドが必要な場合は `extras/scripts/build-*.bat` を使用する。NASM、CMake、Python、meson、ninja が必要。
+
+### mimalloc 統合
+
+JPEGView は mimalloc メモリアロケータを使用してメモリ割り当てを最適化している。
+
+#### mimalloc のビルド手順
+
+1. **リポジトリのクローン**
+   ```bash
+   cd D:\project-tmp
+   git clone https://github.com/microsoft/mimalloc.git
+   cd mimalloc
+   ```
+
+2. **CMakeSettings.json の編集**
+
+   `CMakeSettings.json` に以下の x64-Release 構成を追加:
+   ```json
+   {
+     "name": "x64-Release",
+     "generator": "Ninja",
+     "configurationType": "Release",
+     "inheritEnvironments": ["msvc_x64_x64"],
+     "buildRoot": "${projectDir}\\out\\build\\${name}",
+     "installRoot": "${projectDir}\\out\\install\\${name}",
+     "cmakeCommandArgs": "-DMI_OVERRIDE=ON -DMI_BUILD_SHARED=OFF -DMI_BUILD_TESTS=OFF -DMI_BUILD_OBJECT=OFF -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded",
+     "buildCommandArgs": "",
+     "ctestCommandArgs": ""
+   }
+   ```
+
+   重要なオプション:
+   - `MI_OVERRIDE=ON`: malloc/free/new/delete を override
+   - `MI_BUILD_SHARED=OFF`: 静的ライブラリとしてビルド
+   - `CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded`: `/MT` で静的 CRT リンク
+
+3. **Visual Studio 2026 でビルド**
+
+   VS2026 で `mimalloc` フォルダを開き、x64-Release 構成を選択してビルド。
+
+   出力: `out/build/x64-Release/mimalloc.lib` (約 811KB)
+
+4. **ライブラリのコピー**
+   ```bash
+   cp D:/project-tmp/mimalloc/out/build/x64-Release/mimalloc.lib \
+      D:/project-tmp/jpegview/src/JPEGView/bin/x64/Release/
+   ```
+
+#### JPEGView への統合（完了済み）
+
+`src/JPEGView/JPEGView.vcxproj` の Release|x64 構成に以下が追加済み:
+
+- **AdditionalDependencies**: `mimalloc.lib;...`（先頭に追加）
+- **AdditionalOptions**: `/INCLUDE:mi_version`（override 機能を有効化）
+
+リンカーは `bin\x64\$(Configuration)` ディレクトリから mimalloc.lib を検索する。
 
 ## アーキテクチャ
 
@@ -118,7 +175,8 @@ Windows Template Library (WTL) ベース。`Panel` / `PanelMgr` による UI パ
 ### スレッドモデル
 
 - `ImageLoadThread`（`CWorkThread` 派生）で非同期画像読み込み
-- `ProcessingThreadPool` で物理コア数分の並列画像処理（上限 16）
+- `ProcessingThreadPool` で物理コア数分の並列画像処理（上限 64、INI で設定可能）
+- AVIF デコーダのスレッド数も INI 設定値を使用（`CPUCoresUsed`）
 - 先読みバッファリング（前後の画像をプリロード）
 
 ### パフォーマンス最適化
@@ -142,14 +200,16 @@ JPEGView の高速表示は以下 6 層の最適化技術の組み合わせで�
 
 #### 2. マルチスレッド並列処理
 
-**対象ファイル**: `ProcessingThreadPool.cpp`
+**対象ファイル**: `ProcessingThreadPool.cpp`, `AVIFWrapper.cpp`
 
 - **ストリップ分割**: 画像を水平ストリップに分割し、物理コア数 - 1 のワーカースレッド + 呼び出し元スレッドで並列処理
+- **スレッド数上限**: INI 設定 `CPUCoresUsed` で最大 64 まで設定可能（デフォルト: 自動検出された物理コア数）
+- **AVIF デコーダ並列化**: libavif/dav1d のデコードスレッド数も INI 設定値を使用（従来はハードコード 256）
 - **最小ピクセル閾値**: 10 万ピクセル未満または高さ 12 以下はシングルスレッド（オーバーヘッド回避）
 - **キャッシュ最適化**: ストリップあたり最大 10 万ピクセルに制限し、L2/L3 キャッシュに収まるサイズを維持
 - **アラインメント**: AVX2 は 16 ピクセル境界、SSE は 8 ピクセル境界でストリップ高を調整
 
-並列化対象: HQ リサイズ、LDC、ガウスフィルタ、アンシャープマスク、HQ 回転、台形補正
+並列化対象: HQ リサイズ、LDC、ガウスフィルタ、アンシャープマスク、HQ 回転、台形補正、AVIF デコード
 
 #### 3. 先読みバッファリング
 
@@ -195,6 +255,8 @@ JPEGView の高速表示は以下 6 層の最適化技術の組み合わせで�
 #### 最適化の連携
 
 これら 6 層の最適化が連携することで、大画像でもスムーズな表示切り替えとリアルタイムのパン/ズーム/色調調整を実現している。特に先読み+非同期処理+事前 GetDIB により、次の画像に切り替えた瞬間に既にリサイズ済み DIB が準備完了しているという点が高速表示の核心だ。
+
+さらに、**mimalloc メモリアロケータ**の統合により、頻繁なメモリ割り当て・解放（画像バッファ、SIMD 処理用一時バッファ等）のオーバーヘッドが削減され、マルチスレッド環境でのメモリアロケーション競合も最小化されている。
 
 ## サードパーティライブラリ
 
