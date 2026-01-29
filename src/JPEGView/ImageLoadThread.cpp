@@ -902,6 +902,8 @@ void CImageLoadThread::ProcessReadHEIFRequest(CRequest* request) {
 		return;
 	}
 	char* pBuffer = NULL;
+	bool bFallbackToWIC = false;
+	bool bDllLoadFailure = false;
 	UINT nPrevErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
 	try {
 		unsigned int nNumBytesRead;
@@ -936,17 +938,30 @@ void CImageLoadThread::ProcessReadHEIFRequest(CRequest* request) {
 			}
 		}
 	} catch(heif::Error he) {
-		// invalid image
+		OutputDebugStringA("[JPEGView] HEIF decode heif::Error: ");
+		OutputDebugStringA(he.get_message().c_str());
+		OutputDebugStringA(", falling back to WIC\n");
 		delete request->Image;
 		request->Image = NULL;
+		bFallbackToWIC = true;
 	} catch (...) {
+		OutputDebugStringA("[JPEGView] HEIF exception (non-heif::Error), falling back to WIC\n");
 		delete request->Image;
 		request->Image = NULL;
-		request->ExceptionError = true;
+		bFallbackToWIC = true;
+		bDllLoadFailure = true;
 	}
 	SetErrorMode(nPrevErrorMode);
 	::CloseHandle(hFile);
 	delete[] pBuffer;
+
+	// libheif デコード失敗時、WIC 経由で再試行
+	if (bFallbackToWIC) {
+		ProcessReadWICRequest(request);
+		if (request->Image == NULL && bDllLoadFailure) {
+			request->ExceptionError = true;
+		}
+	}
 }
 
 void CImageLoadThread::ProcessReadPSDRequest(CRequest* request) {
