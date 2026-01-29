@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `f6ce1a8` | バージョン表記を fork 版に変更、Copyright に 2026 nikai を追加 |
 | `abc0fc1` | INI ファイルのコメントを日本語化 |
 | `35bc05d` | INI コメントの日本語化改善、デフォルト値変更（IniEditor→system、NavigateWithMouseWheel→true） |
-| (未コミット) | サードパーティライブラリ更新: libjpeg-turbo 3.1.3, libpng 1.6.54 (APNG パッチ対応), zlib 1.3.1.2, libwebp 1.6.0, libjxl 0.11.1, libheif 1.21.2, dav1d 1.5.3, LibRaw 0.22.0, lcms2 2.18 |
+| `c97922f` | サードパーティライブラリ更新: libjpeg-turbo 3.1.3, libpng 1.6.54 (APNG パッチ対応), zlib 1.3.1.2, libwebp 1.6.0, libjxl 0.11.1, libheif 1.21.2, dav1d 1.5.3, LibRaw 0.22.0, lcms2 2.18 |
 
 ## ビルド
 
