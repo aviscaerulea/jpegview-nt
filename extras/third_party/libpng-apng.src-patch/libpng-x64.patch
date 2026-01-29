@@ -329,7 +329,7 @@ index e10f4ff8b..062abd07a 100644
      <ClCompile>
        <WarningLevel>Level3</WarningLevel>
 @@ -399,34 +588,50 @@
-       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug Library|ARM64'">WIN32;_DEBUG;PNG_ARM_NEON_OPT=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug Library|ARM64'">WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;PNG_ARM_NEON_OPT=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
        <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Library|ARM64'">NotUsing</PrecompiledHeader>
        <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Library|Win32'">NotUsing</PrecompiledHeader>
 +      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Library|x64'">NotUsing</PrecompiledHeader>
@@ -342,7 +342,7 @@ index e10f4ff8b..062abd07a 100644
      </ClCompile>
      <ClCompile Include="..\..\..\arm\filter_neon_intrinsics.c">
        <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Library|ARM64'">NotUsing</PrecompiledHeader>
-       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug Library|ARM64'">WIN32;_DEBUG;PNG_ARM_NEON_OPT=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug Library|ARM64'">WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;PNG_ARM_NEON_OPT=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
        <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Library|Win32'">NotUsing</PrecompiledHeader>
 +      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Library|x64'">NotUsing</PrecompiledHeader>
        <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Library|Win32'">NotUsing</PrecompiledHeader>
@@ -354,7 +354,7 @@ index e10f4ff8b..062abd07a 100644
      </ClCompile>
      <ClCompile Include="..\..\..\arm\palette_neon_intrinsics.c">
        <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Library|ARM64'">NotUsing</PrecompiledHeader>
-       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug Library|ARM64'">WIN32;_DEBUG;PNG_ARM_NEON_OPT=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug Library|ARM64'">WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;PNG_ARM_NEON_OPT=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
        <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Library|Win32'">NotUsing</PrecompiledHeader>
 +      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release Library|x64'">NotUsing</PrecompiledHeader>
        <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug Library|Win32'">NotUsing</PrecompiledHeader>
