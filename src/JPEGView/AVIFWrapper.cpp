@@ -5,6 +5,7 @@
 #include "BasicProcessing.h"
 #include "MaxImageDef.h"
 #include "ICCProfileTransform.h"
+#include "SettingsProvider.h"
 
 struct AvifReader::avif_cache {
 	avifDecoder* decoder;
@@ -35,7 +36,7 @@ void* AvifReader::ReadImage(int& width,
 	exif_chunk = NULL;
 
 	avifResult result;
-	int nthreads = 256; // sets maximum number of active threads allowed for libavif, default is 1
+	int nthreads = CSettingsProvider::This().NumberOfCoresToUse(); // use configured core count from INI
 
 	// Cache animations
 	if (cache.decoder == NULL) {
