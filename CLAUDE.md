@@ -23,6 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `c97922f` | サードパーティライブラリ更新: libjpeg-turbo 3.1.3, libpng 1.6.54 (APNG パッチ対応), zlib 1.3.1.2, libwebp 1.6.0, libjxl 0.11.1, libheif 1.21.2, dav1d 1.5.3, LibRaw 0.22.0, lcms2 2.18 |
 | `5715140` | パフォーマンス最適化: スレッド数拡大（16→64）、AVIF デコーダ最適化、mimalloc 統合 |
 | `17377eb` | PDF 表紙プレビュー機能追加（PDFium ベース）: スムージング有効、DPI 上限撤廃、FPDF_LoadCustomDocument によるファイルベース読み込み、post-build 自動コピー整備 |
+| `697a478` | PDF プレビュー時の Enter キー操作追加: OS 関連付けアプリで開く機能（ShellExecute）|
 
 ### サードパーティライブラリ バージョン比較
 

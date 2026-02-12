@@ -980,6 +980,14 @@ LRESULT CMainDlg::OnKeyDown(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOO
 	} else if (wParam == VK_F1) {
 		bHandled = true;
 		ExecuteCommand(IDM_HELP);
+	} else if (wParam == VK_RETURN && !bAlt && !bCtrl && !bShift &&
+	           m_pCurrentImage != NULL && m_pCurrentImage->GetImageFormat() == IF_PDF) {
+		// PDF プレビュー時の Enter → OS 関連付けアプリで開く
+		bHandled = true;
+		LPCTSTR sFileName = CurrentFileName(false);
+		if (sFileName != NULL) {
+			::ShellExecute(m_hWnd, _T("open"), sFileName, NULL, NULL, SW_SHOW);
+		}
 	} else {
 		int nCommand = m_pKeyMap->GetCommandIdForKey((int)wParam, bAlt, bCtrl, bShift);
 		if (nCommand > 0) {
