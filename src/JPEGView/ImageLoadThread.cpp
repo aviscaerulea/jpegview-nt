@@ -17,6 +17,7 @@
 #include "HEIFWrapper.h"
 #include "AVIFWrapper.h"
 #include "RAWWrapper.h"
+#include "PDFWrapper.h"
 #endif
 #include "WEBPWrapper.h"
 #include "QOIWrapper.h"
@@ -79,6 +80,8 @@ static EImageFormat GetImageFormat(LPCTSTR sFileName) {
 		return IF_QOI;
 	} else if (header[0] == '8' && header[1] == 'B' && header[2] == 'P' && header[3] == 'S') {
 		return IF_PSD;
+	} else if (header[0] == '%' && header[1] == 'P' && header[2] == 'D' && header[3] == 'F') {
+		return IF_PDF;
 	}
 
 	// default fallback if no matches based on magic bytes
@@ -368,6 +371,14 @@ void CImageLoadThread::ProcessRequest(CRequestBase& request) {
 			DeleteCachedJxlDecoder();
 			DeleteCachedAvifDecoder();
 			ProcessReadRAWRequest(&rq);
+			break;
+		case IF_PDF:
+			DeleteCachedGDIBitmap();
+			DeleteCachedWebpDecoder();
+			DeleteCachedPngDecoder();
+			DeleteCachedJxlDecoder();
+			DeleteCachedAvifDecoder();
+			ProcessReadPDFRequest(&rq);
 			break;
 #endif
 		case IF_QOI:
@@ -1090,6 +1101,40 @@ typedef void Deallocator(unsigned char* buffer);
 
 __declspec(dllimport) unsigned char* __stdcall LoadImageWithWIC(LPCWSTR fileName, Allocator* allocator, Deallocator* deallocator,
 	unsigned int* width, unsigned int* height);
+
+#ifndef WINXP
+
+void CImageLoadThread::ProcessReadPDFRequest(CRequest* request) {
+	HANDLE hFile = ::CreateFile(request->FileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile == INVALID_HANDLE_VALUE) return;
+
+	UINT nPrevErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
+	try {
+		long long nFileSize = Helpers::GetFileSize(hFile);
+		if (nFileSize > MAX_PDF_FILE_SIZE) {
+			request->OutOfMemory = true;
+		} else {
+			int nWidth, nHeight, nBPP;
+			uint8* pPixelData = (uint8*)PdfReader::ReadImage(
+				nWidth, nHeight, nBPP,
+				request->OutOfMemory, hFile, (unsigned long)nFileSize);
+			if (pPixelData != NULL) {
+				// 表紙のみ: frame_index=0, frame_count=1
+				request->Image = new CJPEGImage(
+					nWidth, nHeight, pPixelData, NULL, nBPP, 0,
+					IF_PDF, false, 0, 1, 0);
+			}
+		}
+	} catch (...) {
+		delete request->Image;
+		request->Image = NULL;
+		request->ExceptionError = true;
+	}
+	SetErrorMode(nPrevErrorMode);
+	::CloseHandle(hFile);
+}
+
+#endif // WINXP
 
 void CImageLoadThread::ProcessReadWICRequest(CRequest* request) {
 	const wchar_t* sFileName;

@@ -273,6 +273,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <AdditionalIncludeDirectories>libpdfium\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -280,12 +281,12 @@
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>mimalloc.lib;legacy_stdio_definitions.lib;legacy_stdio_wide_specifiers.lib;gdiplus.lib;WICLoader.lib;turbojpeg-static.lib;libpng16.lib;zlib.lib;jxl_dec.lib;jxl_threads.lib;heif.lib;libwebp.lib;libwebpdemux.lib;avif.lib;lcms2.lib;libraw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>pdfium.lib;mimalloc.lib;legacy_stdio_definitions.lib;legacy_stdio_wide_specifiers.lib;gdiplus.lib;WICLoader.lib;turbojpeg-static.lib;libpng16.lib;zlib.lib;jxl_dec.lib;jxl_threads.lib;heif.lib;libwebp.lib;libwebpdemux.lib;avif.lib;lcms2.lib;libraw.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>bin\x64\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <DelayLoadDLLs>WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll</DelayLoadDLLs>
+      <DelayLoadDLLs>pdfium.dll;WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll</DelayLoadDLLs>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalOptions>/INCLUDE:mi_version /IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
@@ -314,6 +315,7 @@
     <ClCompile Include="FileList.cpp" />
     <ClCompile Include="HashCompareLPCTSTR.cpp" />
     <ClCompile Include="HEIFWrapper.cpp" />
+    <ClCompile Include="PDFWrapper.cpp" />
     <ClCompile Include="HelpDlg.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="HelpersGUI.cpp" />
@@ -405,6 +407,7 @@
     <ClInclude Include="FileList.h" />
     <ClInclude Include="HashCompareLPCTSTR.h" />
     <ClInclude Include="HEIFWrapper.h" />
+    <ClInclude Include="PDFWrapper.h" />
     <ClInclude Include="HelpDlg.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="HelpersGUI.h" />

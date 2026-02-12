@@ -41,6 +41,7 @@ enum EImageFormat {
 	IF_AVIF,
 	IF_QOI,
 	IF_PSD,
+	IF_PDF,
 	IF_WIC,
 	IF_CLIPBOARD,
 	IF_CameraRAW,

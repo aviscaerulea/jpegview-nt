@@ -776,6 +776,8 @@ EImageFormat GetImageFormat(LPCTSTR sFileName) {
 			return IF_QOI;
 		} else if (_tcsicmp(sEnding, _T("PSD")) == 0) {
 			return IF_PSD;
+		} else if (_tcsicmp(sEnding, _T("PDF")) == 0) {
+			return IF_PDF;
 		} else if (IsInFileEndingList(CSettingsProvider::This().FilesProcessedByWIC(), sEnding)) {
 			return IF_WIC;
 		} else if (IsInFileEndingList(CSettingsProvider::This().FileEndingsRAW(), sEnding)) {
