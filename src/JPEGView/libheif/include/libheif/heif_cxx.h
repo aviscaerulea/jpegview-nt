@@ -131,6 +131,8 @@ namespace heif {
     // throws Error
     void read_from_reader(Reader&, const ReadingOptions& opts = ReadingOptions());
 
+    void set_max_decoding_threads(int max_threads) { heif_context_set_max_decoding_threads(m_context.get(), max_threads); }
+
     int get_number_of_top_level_images() const noexcept;
 
     bool is_top_level_image_ID(heif_item_id id) const noexcept;

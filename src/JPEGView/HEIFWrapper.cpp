@@ -3,6 +3,7 @@
 #include "HEIFWrapper.h"
 #include "MaxImageDef.h"
 #include "ICCProfileTransform.h"
+#include "SettingsProvider.h"
 
 void * HeifReader::ReadImage(int &width,
 					   int &height,
@@ -23,6 +24,8 @@ void * HeifReader::ReadImage(int &width,
 
 	heif::Context context;
 	context.read_from_memory_without_copy(buffer, sizebytes);
+	// HEIC タイルデコードの並列スレッド数を設定（AVIF と同様に INI の CPUCoresUsed を使用）
+	context.set_max_decoding_threads(CSettingsProvider::This().NumberOfCoresToUse());
 	frame_count = context.get_number_of_top_level_images();
 	heif_item_id item_id = context.get_list_of_top_level_image_IDs().at(frame_index);
 	heif::ImageHandle handle = context.get_image_handle(item_id);
