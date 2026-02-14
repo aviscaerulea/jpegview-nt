@@ -299,7 +299,7 @@ CSettingsProvider::CSettingsProvider(void) {
 		}
 	}
 
-	m_bSkipFileOpenDialogOnStartup = GetBool(_T("SkipFileOpenDialogOnStartup"), false);
+	m_bSkipFileOpenDialogOnStartup = GetBool(_T("SkipFileOpenDialogOnStartup"), true);
 
 	m_sLanguage = GetString(_T("Language"), _T("auto"));
 	m_sGPSMapProvider = GetString(_T("GPSMapProvider"), _T("https://opentopomap.org/#marker=15/{lat}/{lng}"));

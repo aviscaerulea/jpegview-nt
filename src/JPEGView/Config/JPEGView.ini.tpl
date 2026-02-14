@@ -15,7 +15,7 @@
 SingleInstance=false
 
 ; true の場合、ファイル名パラメータなしで起動した際に「ファイルを開く」ダイアログを表示しない
-SkipFileOpenDialogOnStartup=false
+SkipFileOpenDialogOnStartup=true
 
 ; WIC（Windows Image Converter）でデコードするファイルの拡張子
 ; Microsoft Camera Codec Pack がインストールされていれば、RAW ファイルを WIC で読み込める
@@ -137,7 +137,7 @@ SingleFullScreenInstance=true
 ; 'image': 画像サイズに合わせて自動調整
 ; 'sticky': 前回のウィンドウサイズを復元（ShowFullScreen=auto の場合は左上位置のみ復元）
 ; 'left top right bottom': スペース区切りの座標指定（例: 100 100 900 700）
-DefaultWindowRect=image
+DefaultWindowRect=auto
 
 ; DefaultWindowRect=sticky の場合に保存されるウィンドウ矩形
 StickyWindowRect=
