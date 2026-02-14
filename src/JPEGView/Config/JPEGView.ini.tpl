@@ -125,7 +125,7 @@ AllowEditGlobalSettings=false
 ; 'true': 常にフルスクリーンで起動
 ; 'false': 常にウィンドウモードで起動
 ; 'auto': 最初の画像サイズに応じて自動選択（小さい画像はウィンドウ、大きい画像はフルスクリーン）
-ShowFullScreen=auto
+ShowFullScreen=false
 
 ; true の場合、フルスクリーンモードでは単一インスタンスのみ許可
 ; SingleInstance=true の場合、この設定は無視される
@@ -184,7 +184,7 @@ ScaleFactorNavPanel=1.0
 
 ; フォルダ内の画像ファイルの並び替え順
 ; LastModDate, CreationDate, FileName, FileSize, Random のいずれか
-FileDisplayOrder=LastModDate
+FileDisplayOrder=FileName
 
 ; true の場合、昇順（A→Z, 0→9）、false の場合、降順（Z→A, 9→0）
 FileSortAscending=true
@@ -197,7 +197,7 @@ FolderNavigation=LoopFolder
 
 ; true の場合、最後の画像から最初の画像へ（またはその逆）ループする
 ; false の場合、最初と最後の画像で停止する
-WrapAroundFolder=true
+WrapAroundFolder=false
 
 ; WrapAroundFolder=false 時、ファイルリストの末尾/先頭を超えて移動しようとした場合の動作
 ; true の場合、これ以上画像がないときにウィンドウを一瞬フラッシュする
@@ -292,7 +292,7 @@ TransparencyColor=0 0 0
 AutoZoomMode=FitNoZoom
 
 ; フルスクリーンモードでの自動ズームモード。空の場合は AutoZoomMode と同じ値を使用
-AutoZoomModeFullscreen=
+AutoZoomModeFullscreen=FitNoZoom
 
 ; 連続ズーム時に指定パーセントで一時停止する（デフォルト: 100%）
 ; 画像サイズやズームステップに関係なく、指定パーセントに確実に到達できる
