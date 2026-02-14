@@ -226,7 +226,7 @@ $zipPath = "JPEGView-nt-${Version}_x64.zip"
 if (Test-Path $zipPath) {
     Remove-Item $zipPath -Force
 }
-Compress-Archive -Path $tempDir -DestinationPath $zipPath -CompressionLevel Optimal
+Compress-Archive -Path "$tempDir\*" -DestinationPath $zipPath -CompressionLevel Optimal
 
 $zipSize = (Get-Item $zipPath).Length / 1MB
 Write-Host "  zip 作成完了: $zipPath ($([Math]::Round($zipSize, 2)) MB)" -ForegroundColor Green
