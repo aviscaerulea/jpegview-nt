@@ -101,6 +101,7 @@ namespace HelpersGUI {
 	HFONT DefaultGUIFont = NULL;
 	HFONT SystemFont = NULL;
 	HFONT DefaultFileNameFont = NULL;
+	HFONT PdfHintFont = NULL;
 
 	int ScaleToScreen(int value)
 	{
@@ -144,6 +145,14 @@ namespace HelpersGUI {
 				DefaultFileNameFont = CreateFontFromINIDescription(dc, _T("\"Arial\" 10.0 bold"));
 		}
 		::SelectObject(dc, DefaultFileNameFont);
+	}
+
+	// PDF ヒントテキスト用フォント（FileNameFont の 2 倍サイズ）
+	void SelectPdfHintFont(HDC dc) {
+		if (PdfHintFont == NULL) {
+			PdfHintFont = CreateFontFromINIDescription(dc, _T("\"Arial\" 20.0 bold"));
+		}
+		::SelectObject(dc, PdfHintFont);
 	}
 
 	void TranslateMenuStrings(HMENU hMenu, CKeyMap* pKeyMap) {

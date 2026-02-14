@@ -577,10 +577,10 @@ LRESULT CMainDlg::OnPaint(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam*/, B
 	// PDF プレビューヒント表示
 	if (m_pCurrentImage != NULL && m_pCurrentImage->GetImageFormat() == IF_PDF) {
 		dc.SetTextColor(CSettingsProvider::This().ColorGUI());
-		HelpersGUI::SelectDefaultFileNameFont(dc);
+		HelpersGUI::SelectPdfHintFont(dc);
 		CRect hintRect(
 			imageProcessingArea.left,
-			imageProcessingArea.bottom - HelpersGUI::ScaleToScreen(25),
+			imageProcessingArea.bottom - HelpersGUI::ScaleToScreen(45),
 			imageProcessingArea.right - HelpersGUI::ScaleToScreen(10),
 			imageProcessingArea.bottom - HelpersGUI::ScaleToScreen(5));
 		HelpersGUI::DrawTextBordered(dc,

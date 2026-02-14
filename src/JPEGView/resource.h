@@ -9,7 +9,7 @@
 
 #define JPEGVIEW_VERSION "1.3.46.0 fork\0"
 // title for main window and msgbox so it can be change via actions
-#define JPEGVIEW_TITLE "JPEGView"
+#define JPEGVIEW_TITLE "JPEGView-fork (nt)"
 
 
 #define IDD_ABOUTBOX				100
