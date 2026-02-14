@@ -72,7 +72,7 @@
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)..\..\deps\WTL-sf\Include;$(ProjectDir)libpng-apng\include;$(ProjectDir)libjxl\include;$(ProjectDir)\libheif\include;$(ProjectDir)\libwebp\include;$(ProjectDir)\libavif\include;$(ProjectDir)\lcms2\include;$(ProjectDir)\libraw\include;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)..\..\deps\WTL-sf\Include;$(ProjectDir)libpng-apng\include;$(ProjectDir)libjxl\include;$(ProjectDir)\libheif\include;$(ProjectDir)\libwebp\include;$(ProjectDir)\libavif\include;$(ProjectDir)\lcms2\include;$(ProjectDir)\libraw\include;$(IncludePath)</IncludePath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(ProjectDir)libjpeg-turbo\lib;$(ProjectDir)libpng-apng\lib;$(ProjectDir)libjxl\lib;$(ProjectDir)libheif\lib;$(ProjectDir)libwebp\lib;$(ProjectDir)libavif\lib;$(ProjectDir)lcms2\lib;$(ProjectDir)libraw\lib;$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)libjpeg-turbo\lib64;$(ProjectDir)libpng-apng\lib64;$(ProjectDir)libjxl\lib64;$(ProjectDir)libheif\lib64;$(ProjectDir)libwebp\lib64;$(ProjectDir)libavif\lib64;$(ProjectDir)lcms2\lib64;$(ProjectDir)libraw\lib64;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(ProjectDir)libjpeg-turbo\lib64;$(ProjectDir)libpng-apng\lib64;$(ProjectDir)libjxl\lib64;$(ProjectDir)libheif\lib64;$(ProjectDir)libwebp\lib64;$(ProjectDir)libavif\lib64;$(ProjectDir)lcms2\lib64;$(ProjectDir)libraw\lib64;$(ProjectDir)libpdfium\lib64;$(LibraryPath)</LibraryPath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)..\..\deps\WTL-sf\Include;$(ProjectDir)libpng-apng\include;$(ProjectDir)libjxl\include;$(ProjectDir)\libheif\include;$(ProjectDir)\libwebp\include;$(ProjectDir)\libavif\include;$(ProjectDir)\lcms2\include;$(ProjectDir)\libraw\include;$(IncludePath)</IncludePath>
     <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(ProjectDir)..\..\deps\WTL-sf\Include;$(ProjectDir)libpng-apng\include;$(ProjectDir)libjxl\include;$(ProjectDir)\libheif\include;$(ProjectDir)\libwebp\include;$(ProjectDir)\libavif\include;$(ProjectDir)\lcms2\include;$(ProjectDir)\libraw\include;$(IncludePath)</IncludePath>
     <LibraryPath Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectDir)libjpeg-turbo\lib;$(ProjectDir)libpng-apng\lib;$(ProjectDir)libjxl\lib;$(ProjectDir)libheif\lib;$(ProjectDir)libwebp\lib;$(ProjectDir)libavif\lib;$(ProjectDir)lcms2\lib;$(ProjectDir)libraw\lib;$(LibraryPath)</LibraryPath>
@@ -258,14 +258,15 @@
       <Optimization>MaxSpeed</Optimization>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <StringPooling>false</StringPooling>
+      <StringPooling>true</StringPooling>
       <ExceptionHandling>Async</ExceptionHandling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>
       </DebugInformationFormat>
-      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <CreateHotpatchableImage>false</CreateHotpatchableImage>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
@@ -287,6 +288,8 @@
       <SubSystem>Windows</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <DelayLoadDLLs>pdfium.dll;WICLoader.dll;jxl_dec.dll;jxl_threads.dll;heif.dll;avif.dll;lcms2.dll;libraw.dll</DelayLoadDLLs>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalOptions>/INCLUDE:mi_version /IGNORE:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>

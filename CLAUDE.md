@@ -27,6 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `fb53694` | PDF プレビュー時のヒントテキスト表示追加: 画面右下に Enter キーの操作ガイドを表示（ローカライズ対応）|
 | `d2da9ca` | HEIF デコーダのスレッド並列化追加: libheif の set_max_decoding_threads API で INI 設定の CPUCoresUsed を使用 |
 | `86f89af` | CPU コア数検出を論理コア数（ハイパースレッディング含む）に変更: ProcessorMask ビットカウントで論理プロセッサ数を自動検出 |
+| （未コミット） | Release\|x64 ビルド最適化設定統一: WICLoader PDB 無効化、JPEGView 最適化オプション追加（StringPooling, FunctionLevelLinking, IntrinsicFunctions, OptimizeReferences, EnableCOMDATFolding）、pdfium.lib インポートライブラリ生成・配置 |
 
 ### サードパーティライブラリ バージョン比較
 
