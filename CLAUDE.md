@@ -101,7 +101,7 @@ JPEGView は mimalloc メモリアロケータを使用してメモリ割り当�
 4. **ライブラリのコピー**
    ```bash
    cp D:/project-tmp/mimalloc/out/build/x64-Release/mimalloc.lib \
-      D:/project-tmp/jpegview/src/JPEGView/bin/x64/Release/
+      src/JPEGView/mimalloc/lib64/
    ```
 
 #### JPEGView への統合（完了済み）
