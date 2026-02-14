@@ -23,6 +23,8 @@
 *.ilk
 *.exp
 *.exe
+*.def
+*.log
 
 *.user
 
