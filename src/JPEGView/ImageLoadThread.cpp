@@ -1151,21 +1151,34 @@ void CImageLoadThread::ProcessReadPDFRequest(CRequest* request) {
 	HANDLE hFile = ::CreateFile(request->FileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE) return;
 
+	char* pBuffer = NULL;
 	UINT nPrevErrorMode = SetErrorMode(SEM_FAILCRITICALERRORS);
 	try {
 		long long nFileSize = Helpers::GetFileSize(hFile);
 		if (nFileSize > MAX_PDF_FILE_SIZE) {
 			request->OutOfMemory = true;
 		} else {
-			int nWidth, nHeight, nBPP;
-			uint8* pPixelData = (uint8*)PdfReader::ReadImage(
-				nWidth, nHeight, nBPP,
-				request->OutOfMemory, hFile, (unsigned long)nFileSize);
-			if (pPixelData != NULL) {
-				// 表紙のみ: frame_index=0, frame_count=1
-				request->Image = new CJPEGImage(
-					nWidth, nHeight, pPixelData, NULL, nBPP, 0,
-					IF_PDF, false, 0, 1, 0);
+			// ファイル全体をメモリに読み込む
+			pBuffer = new(std::nothrow) char[(size_t)nFileSize];
+			if (pBuffer == NULL) {
+				request->OutOfMemory = true;
+			} else {
+				unsigned int nNumBytesRead;
+				if (::ReadFile(hFile, pBuffer, (DWORD)nFileSize, (LPDWORD)&nNumBytesRead, NULL) && nNumBytesRead == nFileSize) {
+					::CloseHandle(hFile);  // ハンドルを即座にクローズ（デコード前）
+					hFile = INVALID_HANDLE_VALUE;
+
+					int nWidth, nHeight, nBPP;
+					uint8* pPixelData = (uint8*)PdfReader::ReadImage(
+						nWidth, nHeight, nBPP,
+						request->OutOfMemory, pBuffer, (int)nFileSize);
+					if (pPixelData != NULL) {
+						// 表紙のみ: frame_index=0, frame_count=1
+						request->Image = new CJPEGImage(
+							nWidth, nHeight, pPixelData, NULL, nBPP, 0,
+							IF_PDF, false, 0, 1, 0);
+					}
+				}
 			}
 		}
 	} catch (...) {
@@ -1174,7 +1187,10 @@ void CImageLoadThread::ProcessReadPDFRequest(CRequest* request) {
 		request->ExceptionError = true;
 	}
 	SetErrorMode(nPrevErrorMode);
-	::CloseHandle(hFile);
+	if (hFile != INVALID_HANDLE_VALUE) {
+		::CloseHandle(hFile);
+	}
+	delete[] pBuffer;
 }
 
 void CImageLoadThread::ProcessReadSVGRequest(CRequest* request) {

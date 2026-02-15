@@ -6,95 +6,17 @@
 
 #include <fpdfview.h>
 
-// 前方宣言
-static int ReadBlockFromHandle(void* param, unsigned long position,
-	unsigned char* pBuf, unsigned long size);
-
-// PDF ドキュメントキャッシュ（最後の 1 ドキュメントのみ保持）
-class CPdfDocumentCache {
+// PDFium API 全体を保護するミューテックス（RAII パターン）
+class CPdfiumLock {
 public:
-	static CPdfDocumentCache& Instance();
-	FPDF_DOCUMENT GetDocument(HANDLE hFile, unsigned long fileSize);
-	void ClearAll();
-
+	CPdfiumLock() { ::InitializeCriticalSection(&m_cs); }
+	~CPdfiumLock() { ::DeleteCriticalSection(&m_cs); }
+	void Lock() { ::EnterCriticalSection(&m_cs); }
+	void Unlock() { ::LeaveCriticalSection(&m_cs); }
 private:
-	CPdfDocumentCache();
-	~CPdfDocumentCache();
-	static CPdfDocumentCache* sm_instance;
-
-	FPDF_DOCUMENT m_cachedDocument;
-	HANDLE m_cachedHandle;
 	CRITICAL_SECTION m_cs;
 };
-
-CPdfDocumentCache* CPdfDocumentCache::sm_instance = NULL;
-
-CPdfDocumentCache& CPdfDocumentCache::Instance() {
-	if (sm_instance == NULL) {
-		sm_instance = new CPdfDocumentCache();
-	}
-	return *sm_instance;
-}
-
-CPdfDocumentCache::CPdfDocumentCache() {
-	m_cachedDocument = NULL;
-	m_cachedHandle = NULL;
-	::InitializeCriticalSection(&m_cs);
-}
-
-CPdfDocumentCache::~CPdfDocumentCache() {
-	ClearAll();
-	::DeleteCriticalSection(&m_cs);
-}
-
-FPDF_DOCUMENT CPdfDocumentCache::GetDocument(HANDLE hFile, unsigned long fileSize) {
-	::EnterCriticalSection(&m_cs);
-
-	// キャッシュヒットチェック（ハンドルで判定）
-	if (m_cachedDocument != NULL && m_cachedHandle == hFile) {
-		::LeaveCriticalSection(&m_cs);
-		return m_cachedDocument;
-	}
-
-	// キャッシュミス: 既存を破棄して新規ロード
-	if (m_cachedDocument != NULL) {
-		FPDF_CloseDocument(m_cachedDocument);
-		m_cachedDocument = NULL;
-	}
-
-	FPDF_FILEACCESS fileAccess;
-	fileAccess.m_FileLen = fileSize;
-	fileAccess.m_GetBlock = ReadBlockFromHandle;
-	fileAccess.m_Param = hFile;
-
-	m_cachedDocument = FPDF_LoadCustomDocument(&fileAccess, NULL);
-	m_cachedHandle = hFile;
-
-	::LeaveCriticalSection(&m_cs);
-	return m_cachedDocument;
-}
-
-void CPdfDocumentCache::ClearAll() {
-	::EnterCriticalSection(&m_cs);
-	if (m_cachedDocument != NULL) {
-		FPDF_CloseDocument(m_cachedDocument);
-		m_cachedDocument = NULL;
-		m_cachedHandle = NULL;
-	}
-	::LeaveCriticalSection(&m_cs);
-}
-
-// FPDF_FILEACCESS コールバック: HANDLE から指定位置のデータを読み込む
-static int ReadBlockFromHandle(void* param, unsigned long position,
-	unsigned char* pBuf, unsigned long size) {
-	HANDLE hFile = (HANDLE)param;
-	DWORD bytesRead = 0;
-	LARGE_INTEGER li;
-	li.QuadPart = position;
-	if (!::SetFilePointerEx(hFile, li, NULL, FILE_BEGIN)) return 0;
-	if (!::ReadFile(hFile, pBuf, size, &bytesRead, NULL)) return 0;
-	return (bytesRead == size) ? 1 : 0;
-}
+static CPdfiumLock s_pdfiumLock;
 
 // 画面サイズに基づく最適 DPI を計算（画面にフィットする DPI）
 double PdfReader::CalculateOptimalDPI(double pageWidthPt, double pageHeightPt) {
@@ -117,7 +39,7 @@ double PdfReader::CalculateOptimalDPI(double pageWidthPt, double pageHeightPt) {
 }
 
 void* PdfReader::ReadImage(int& width, int& height, int& bpp,
-	bool& outOfMemory, HANDLE hFile, unsigned long fileSize)
+	bool& outOfMemory, const void* pBuffer, int fileSize)
 {
 	outOfMemory = false;
 	width = height = 0;
@@ -125,30 +47,36 @@ void* PdfReader::ReadImage(int& width, int& height, int& bpp,
 
 	unsigned char* pPixelData = NULL;
 
-	// PDFium 初期化（一度だけ）
+	// PDFium API 全体をロック（スレッドセーフティ確保）
+	s_pdfiumLock.Lock();
+
+	// PDFium 初期化（lock 内で安全に一度だけ実行）
 	static bool initialized = false;
 	if (!initialized) {
 		FPDF_InitLibrary();
 		initialized = true;
 	}
 
-	// ドキュメントオープン（キャッシュから取得）
-	FPDF_DOCUMENT doc = CPdfDocumentCache::Instance().GetDocument(hFile, fileSize);
+	// メモリバッファから PDF をロード
+	FPDF_DOCUMENT doc = FPDF_LoadMemDocument(pBuffer, fileSize, NULL);
 	if (doc == NULL) {
+		s_pdfiumLock.Unlock();
 		return NULL;
 	}
 
 	// ページ数取得（表紙のみ対応だが取得はする）
 	int pageCount = FPDF_GetPageCount(doc);
 	if (pageCount < 1) {
-		// キャッシュが管理するためクローズしない
+		FPDF_CloseDocument(doc);
+		s_pdfiumLock.Unlock();
 		return NULL;
 	}
 
 	// ページ 0（表紙）をロード
 	FPDF_PAGE page = FPDF_LoadPage(doc, 0);
 	if (page == NULL) {
-		// キャッシュが管理するためクローズしない
+		FPDF_CloseDocument(doc);
+		s_pdfiumLock.Unlock();
 		return NULL;
 	}
 
@@ -164,13 +92,15 @@ void* PdfReader::ReadImage(int& width, int& height, int& bpp,
 	// ピクセル上限チェック
 	if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
 		FPDF_ClosePage(page);
-		// キャッシュが管理するためクローズしない
+		FPDF_CloseDocument(doc);
+		s_pdfiumLock.Unlock();
 		return NULL;
 	}
 	if (abs((double)width * height) > MAX_IMAGE_PIXELS) {
 		outOfMemory = true;
 		FPDF_ClosePage(page);
-		// キャッシュが管理するためクローズしない
+		FPDF_CloseDocument(doc);
+		s_pdfiumLock.Unlock();
 		return NULL;
 	}
 
@@ -179,7 +109,8 @@ void* PdfReader::ReadImage(int& width, int& height, int& bpp,
 	if (bitmap == NULL) {
 		outOfMemory = true;
 		FPDF_ClosePage(page);
-		// キャッシュが管理するためクローズしない
+		FPDF_CloseDocument(doc);
+		s_pdfiumLock.Unlock();
 		return NULL;
 	}
 
@@ -197,7 +128,8 @@ void* PdfReader::ReadImage(int& width, int& height, int& bpp,
 	if (buffer_ptr == NULL || stride < width * bpp) {
 		FPDFBitmap_Destroy(bitmap);
 		FPDF_ClosePage(page);
-		// キャッシュが管理するためクローズしない
+		FPDF_CloseDocument(doc);
+		s_pdfiumLock.Unlock();
 		return NULL;
 	}
 
@@ -208,7 +140,8 @@ void* PdfReader::ReadImage(int& width, int& height, int& bpp,
 		outOfMemory = true;
 		FPDFBitmap_Destroy(bitmap);
 		FPDF_ClosePage(page);
-		// キャッシュが管理するためクローズしない
+		FPDF_CloseDocument(doc);
+		s_pdfiumLock.Unlock();
 		return NULL;
 	}
 
@@ -220,10 +153,12 @@ void* PdfReader::ReadImage(int& width, int& height, int& bpp,
 		       width * bpp);
 	}
 
-	// リソース解放（ドキュメントはキャッシュが管理）
+	// リソース解放（ドキュメントは毎回即座にクローズ）
 	FPDFBitmap_Destroy(bitmap);
 	FPDF_ClosePage(page);
-	// FPDF_CloseDocument(doc); ← キャッシュに残すため削除
+	FPDF_CloseDocument(doc);
+
+	s_pdfiumLock.Unlock();
 
 	return (void*)pPixelData;
 }

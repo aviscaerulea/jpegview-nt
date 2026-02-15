@@ -376,9 +376,9 @@ void CJPEGProvider::DeleteElementAt(std::list<CImageRequest*>::iterator iterator
 }
 
 void CJPEGProvider::DeleteElement(CImageRequest* pRequest) {
+	m_requestList.remove(pRequest);  // リストから先に除去
 	delete pRequest->Image;
 	delete pRequest;
-	m_requestList.remove(pRequest);
 }
 
 bool CJPEGProvider::IsDestructivelyProcessed(CJPEGImage* pImage) {
