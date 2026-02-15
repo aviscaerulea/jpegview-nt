@@ -43,7 +43,8 @@ CJPEGImage* CJPEGProvider::RequestImage(CFileList* pFileList, EReadAheadDirectio
 	// Search if we have the requested image already present or in progress
 	CImageRequest* pRequest = FindRequest(strFileName, nFrameIndex);
 	bool bDirectionChanged = eDirection != m_eOldDirection || eDirection == TOGGLE;
-	bool bRemoveAlsoActiveRequests = bDirectionChanged; // if direction changed, all read-ahead requests are wrongly guessed
+	// 双方向先読みなので方向転換時も先読みキャッシュを保持（TOGGLE は例外的に全破棄）
+	bool bRemoveAlsoActiveRequests = (eDirection == TOGGLE && bDirectionChanged);
 	bool bWasOutOfMemory = false;
 	m_eOldDirection = eDirection;
 
@@ -100,8 +101,29 @@ CJPEGImage* CJPEGProvider::RequestImage(CFileList* pFileList, EReadAheadDirectio
 	ClearOldestInactiveRequest();
 
 	// check if we shall start new requests (don't start another request if we are short of memory!)
-	if (m_requestList.size() < (unsigned int)m_nNumBuffers && !bDirectionChanged && !bWasOutOfMemory && eDirection != NONE) {
-		StartNewRequestBundle(pFileList, eDirection, processParams, m_nNumThread, pRequest);
+	if (m_requestList.size() < (unsigned int)m_nNumBuffers && !bWasOutOfMemory && eDirection != NONE) {
+		// 双方向先読み: 空きバッファを前方向（3/4）と後方向（1/4）に配分
+		int nAvailableSlots = m_nNumBuffers - (int)m_requestList.size();
+		if (nAvailableSlots > 0) {
+			// 進行方向の先読み枚数（最低 1 枚、空きの 75%）
+			int nForwardRequests = max(1, (nAvailableSlots * 3 + 3) / 4);
+			// 逆方向の先読み枚数（残り全て、最低 0 枚）
+			int nBackwardRequests = max(0, nAvailableSlots - nForwardRequests);
+
+			// TOGGLE の場合は双方向先読みしない（2 画像間の切り替え専用）
+			if (eDirection == TOGGLE) {
+				nBackwardRequests = 0;
+			}
+
+			// 進行方向の先読み
+			StartNewRequestBundle(pFileList, eDirection, processParams, nForwardRequests, pRequest);
+
+			// 逆方向の先読み（TOGGLE 以外）
+			if (nBackwardRequests > 0) {
+				EReadAheadDirection eReverseDirection = (eDirection == FORWARD) ? BACKWARD : FORWARD;
+				StartNewRequestBundle(pFileList, eReverseDirection, processParams, nBackwardRequests, pRequest);
+			}
+		}
 	}
 
 	bOutOfMemory = pRequest->OutOfMemory;

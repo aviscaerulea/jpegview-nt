@@ -65,8 +65,7 @@ static const double GAMMA_FACTOR = 1.02; // multiplicator for gamma value
 static const double CONTRAST_INC = 0.03; // increment for contrast value
 static const double SHARPEN_INC = 0.05; // increment for sharpen value
 static const double LDC_INC = 0.1; // increment for LDC (lighten shadows and darken highlights)
-static const int NUM_THREADS = 1; // number of readahead threads to use
-static const int READ_AHEAD_BUFFERS = 2; // number of readahead buffers to use (NUM_THREADS+1 is a good choice)
+// 先読みスレッド数とバッファ数は INI の ReadAheadBuffers から動的に決定する
 static const int ZOOM_TIMEOUT = 200; // refinement done after this many milliseconds
 static const int ZOOM_TEXT_TIMEOUT = 1000; // zoom label disappears after this many milliseconds
 
@@ -383,7 +382,9 @@ LRESULT CMainDlg::OnInitDialog(UINT /*uMsg*/, WPARAM /*wParam*/, LPARAM /*lParam
 	CProcessingThreadPool::This().CreateThreadPoolThreads();
 
 	// create JPEG provider and request first image - do no processing yet if not in fullscreen mode (as we do not know the size yet)
-	m_pJPEGProvider = new CJPEGProvider(m_hWnd, NUM_THREADS, READ_AHEAD_BUFFERS);	
+	int nReadAheadBuffers = CSettingsProvider::This().ReadAheadBuffers();
+	int nNumThreads = min(nReadAheadBuffers - 1, 4);
+	m_pJPEGProvider = new CJPEGProvider(m_hWnd, nNumThreads, nReadAheadBuffers);
 	m_pCurrentImage = m_pJPEGProvider->RequestImage(m_pFileList, CJPEGProvider::FORWARD,
 		m_pFileList->Current(), 0, CreateProcessParams(!m_bFullScreenMode), m_bOutOfMemoryLastImage, m_bExceptionErrorLastImage);
 	if (m_pCurrentImage != NULL && m_pCurrentImage->IsAnimation()) {

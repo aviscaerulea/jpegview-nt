@@ -47,6 +47,7 @@ public:
 	LPCTSTR Language() { return m_sLanguage; }
 	Helpers::CPUType AlgorithmImplementation() { return m_eCPUAlgorithm; }
 	int NumberOfCoresToUse() { return m_nNumCores; }
+	int ReadAheadBuffers() { return m_nReadAheadBuffers; }
 	EFilterType DownsamplingFilter() { return m_eDownsamplingFilter; }
 	Helpers::ESorting Sorting() { return m_eSorting; }
 	bool IsSortedAscending() { return m_bIsSortedAscending; }
@@ -219,6 +220,7 @@ private:
 	CString m_sLanguage;
 	Helpers::CPUType m_eCPUAlgorithm;
 	int m_nNumCores;
+	int m_nReadAheadBuffers;
 	EFilterType m_eDownsamplingFilter;
 	Helpers::ESorting m_eSorting;
 	bool m_bIsSortedAscending;

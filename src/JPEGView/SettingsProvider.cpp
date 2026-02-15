@@ -141,6 +141,8 @@ CSettingsProvider::CSettingsProvider(void) {
 	if (m_nNumCores == 0) {
 		m_nNumCores = Helpers::GetOptimalThreadCount();
 	}
+	// 先読みバッファ数（現在表示 + 先読み枚数）。デフォルト 5 で前方 3 枚 + 後方 1 枚の先読み
+	m_nReadAheadBuffers = GetInt(_T("ReadAheadBuffers"), 5, 2, 8);
 
 	CString sDownSampling = GetString(_T("DownSamplingFilter"), _T("BestQuality"));
 	if (sDownSampling.CompareNoCase(_T("NoAliasing")) == 0) {
