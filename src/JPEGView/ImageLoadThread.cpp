@@ -2,6 +2,8 @@
 #include "StdAfx.h"
 #include "ImageLoadThread.h"
 #include <gdiplus.h>
+#include <thread>
+#include <vector>
 #include "JPEGImage.h"
 #include "MessageDef.h"
 #include "Helpers.h"
@@ -948,10 +950,42 @@ void CImageLoadThread::ProcessReadHEIFRequest(CRequest* request) {
 			void* pEXIFData;
 			uint8* pPixelData = (uint8*)HeifReader::ReadImage(nWidth, nHeight, nBPP, nFrameCount, pEXIFData, request->OutOfMemory, request->FrameIndex, pBuffer, nFileSize);
 			if (pPixelData != NULL) {
-				// Multiply alpha value into each AABBGGRR pixel
+				// Multiply alpha value into each AABBGGRR pixel (並列化)
 				uint32* pImage32 = (uint32*)pPixelData;
-				for (int i = 0; i < nWidth * nHeight; i++)
-					*pImage32++ = Helpers::AlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+				int nTotalPixels = nWidth * nHeight;
+				COLORREF bgColor = CSettingsProvider::This().ColorTransparency();
+
+				// ピクセル数が少ない場合はシングルスレッド処理
+				const int MIN_PIXELS_FOR_PARALLEL = 100000; // 10 万ピクセル未満はシングルスレッド
+				if (nTotalPixels < MIN_PIXELS_FOR_PARALLEL) {
+					for (int i = 0; i < nTotalPixels; i++)
+						pImage32[i] = Helpers::AlphaBlendBackground(pImage32[i], bgColor);
+				} else {
+					// マルチスレッド並列処理
+					int nNumCores = CSettingsProvider::This().NumberOfCoresToUse();
+					int nThreads = min(nNumCores, 8); // 最大 8 スレッド
+
+					// ストリップ分割（各スレッドが処理するピクセル範囲）
+					int nPixelsPerThread = (nTotalPixels + nThreads - 1) / nThreads;
+
+					std::vector<std::thread> threads;
+					for (int t = 0; t < nThreads; t++) {
+						int startIdx = t * nPixelsPerThread;
+						int endIdx = min(startIdx + nPixelsPerThread, nTotalPixels);
+						if (startIdx >= nTotalPixels) break;
+
+						threads.emplace_back([pImage32, startIdx, endIdx, bgColor]() {
+							for (int i = startIdx; i < endIdx; i++) {
+								pImage32[i] = Helpers::AlphaBlendBackground(pImage32[i], bgColor);
+							}
+						});
+					}
+
+					// 全スレッドの完了を待機
+					for (auto& th : threads) {
+						th.join();
+					}
+				}
 
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, nBPP, 0, IF_HEIF, false, request->FrameIndex, nFrameCount, nFrameTimeMs);
 				free(pEXIFData);
