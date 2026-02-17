@@ -1,8 +1,8 @@
 [![Latest GitHub Release](https://img.shields.io/github/v/release/aviscaerulea/jpegview-nt?label=GitHub&style=social)](https://github.com/aviscaerulea/jpegview-nt/releases)[![Downloads](https://badgen.net/github/assets-dl/aviscaerulea/jpegview-nt?cache=3600&color=grey&label=)](#)
 
-> **JPEGView-nt** は [sylikc/jpegview](https://github.com/sylikc/jpegview) v1.3.46.0 からフォークした個人カスタマイズ版です。  
-> HEIC/HEIF 表示対応、SVG 表示対応、PDF 表紙プレビュー機能、AVX2/マルチスレッドによる CPU 最適化。  
-> 他、依存ライブラリを最新版への更新（libjpeg-turbo 3.1.3、libpng 1.6.54、libwebp 1.6.0、libjxl 0.11.1、libheif 1.21.2、LibRaw 0.22.0 など）を行っています。
+**JPEGView-nt** は [sylikc/jpegview](https://github.com/sylikc/jpegview) v1.3.46.0 からフォークした個人カスタマイズ版です。  
+HEIC/HEIF 表示対応、SVG 表示対応、PDF 表紙プレビュー機能、AVX2/マルチスレッドによる CPU 最適化。  
+他、依存ライブラリを最新版への更新（libjpeg-turbo 3.1.3、libpng 1.6.54、libwebp 1.6.0、libjxl 0.11.1、libheif 1.21.2、LibRaw 0.22.0 など）を行っています。
 
 ## Installation
 
@@ -12,6 +12,7 @@ Scoop でもインストール可能です。
 scoop bucket add https://github.com/aviscaerulea/scoop-bucket
 scoop install jpegview-nt
 ```
+<br><br>
 
 ---
 [![Documentation](https://img.shields.io/badge/Docs-Outdated-yellowgreen)](https://htmlpreview.github.io/?https://github.com/sylikc/jpegview/blob/master/src/JPEGView/Config/readme.html) [![Localization Progress](https://img.shields.io/badge/Localized-91%25-blueviolet)](#Localization) [![Build x64](https://github.com/sylikc/jpegview/actions/workflows/build-release-x64.yml/badge.svg?branch=master)](https://github.com/sylikc/jpegview/actions/workflows/build-release-x64.yml) [![OS Support](https://img.shields.io/badge/Windows-XP%20%7C%207%20%7C%208%20%7C%2010%20%7C%2011-blue)](#) [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue)](https://github.com/sylikc/jpegview/blob/master/LICENSE.txt)
