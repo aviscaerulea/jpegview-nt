@@ -2,9 +2,20 @@
 
 [![Latest GitHub Release](https://img.shields.io/github/v/release/sylikc/jpegview?label=GitHub&style=social)](https://github.com/sylikc/jpegview/releases)[![Downloads](https://badgen.net/github/assets-dl/sylikc/jpegview?cache=3600&color=grey&label=)](#) [![WinGet](https://repology.org/badge/version-for-repo/winget/jpegview.svg?allow_ignored=1&header=WinGet)](https://winstall.app/apps/sylikc.JPEGView) [![PortableApps](https://img.shields.io/badge/PortableApps-Current-green)](https://portableapps.com/apps/graphics_pictures/jpegview_portable) [![Scoop](https://repology.org/badge/version-for-repo/scoop/jpegview-fork.svg?header=Scoop)](https://scoop.sh/#/apps?q=%22jpegview-fork%22) [![Chocolatey](https://img.shields.io/chocolatey/v/jpegview)](https://community.chocolatey.org/packages/jpegview) [![Npackd](https://repology.org/badge/version-for-repo/npackd_stable/jpegview.svg?allow_ignored=1&header=Npackd)](https://www.npackd.org/p/jpegview)
 
-> **JPEGView-nt** は [sylikc/jpegview](https://github.com/sylikc/jpegview) v1.3.46.0 からフォークした個人カスタマイズ版です。
-> HEIC/HEIF 表示対応、PDF 表紙プレビュー機能、AVX2/マルチスレッドによる CPU 最適化、依存ライブラリの最新版への更新（libjpeg-turbo 3.1.3、libpng 1.6.54、libwebp 1.6.0、libjxl 0.11.1、libheif 1.21.2、LibRaw 0.22.0 など）を行っています。
+> **JPEGView-nt** は [sylikc/jpegview](https://github.com/sylikc/jpegview) v1.3.46.0 からフォークした個人カスタマイズ版です。  
+> HEIC/HEIF 表示対応、SVG 表示対応、PDF 表紙プレビュー機能、AVX2/マルチスレッドによる CPU 最適化。  
+> 他、依存ライブラリを最新版への更新（libjpeg-turbo 3.1.3、libpng 1.6.54、libwebp 1.6.0、libjxl 0.11.1、libheif 1.21.2、LibRaw 0.22.0 など）を行っています。
 
+## Installation
+
+Scoop でもインストール可能です。
+
+```
+scoop bucket add https://github.com/aviscaerulea/scoop-bucket
+scoop install jpegview-nt
+```
+
+---
 # JPEGView - Image Viewer and Editor
 
 This is the official re-release of JPEGView.
