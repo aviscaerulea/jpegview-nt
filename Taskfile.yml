@@ -17,7 +17,7 @@ tasks:
   build:
     desc: Release|x64 ビルド
     cmds:
-      - 'pwsh -Command "Enable-VSDev; msbuild {{.SLN}} /p:Configuration={{.CONFIG}} /p:Platform={{.PLATFORM}} /t:Rebuild /m:8 /v:minimal /nologo"'
+      - 'cmd /c "{{.ROOT_DIR}}\build.bat" {{.SLN}} {{.CONFIG}} {{.PLATFORM}}'
 
   release:
     desc: "リリース（VERSION 必須。例: task release VERSION=1.3.46.0-20260215.1）"
@@ -26,3 +26,12 @@ tasks:
         - VERSION
     cmds:
       - pwsh -File release.ps1 -Version "{{.VERSION}}"
+
+  rebuild:
+    desc: 実行中のバイナリを停止し、クリーンビルドして再起動する
+    cmds:
+      - cmd: taskkill /F /IM JPEGView.exe
+        ignore_error: true
+      - task: clean
+      - task: build
+      - pwsh.exe -NoProfile -Command "Start-Process '{{.OUT_DIR}}/JPEGView.exe'"
