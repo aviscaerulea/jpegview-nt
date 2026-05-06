@@ -52,7 +52,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## ビルド
 
-- **IDE**: Visual Studio 2026 (PlatformToolset v145)
+- **IDE**: Visual Studio 2026 (PlatformToolset v143)
 - **ソリューション**: `src/JPEGView.sln`
 - **ビルド構成**: Release|x64（当 PC 向け）
 - **C++ 標準**: C++17
