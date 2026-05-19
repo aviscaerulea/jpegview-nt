@@ -214,7 +214,7 @@ void* JxlReader::ReadImage(int& width,
 		s_jxlLock.Unlock();
 		return NULL;
 	}
-	int size = width * height * nchannels;
+	size_t size = (size_t)width * height * nchannels;
 	pPixelData = new(std::nothrow) unsigned char[size];
 	if (pPixelData == NULL) {
 		outOfMemory = true;
@@ -250,7 +250,9 @@ void* JxlReader::ReadImage(int& width,
 
 void JxlReader::DeleteCache() {
 	s_jxlLock.Lock();
-	free(cache.data);
+	// cache.data は ImageLoadThread::ProcessReadJXLRequest で new char[] により確保された
+	// バッファを参照している。new[]/free のミスマッチは UB のため delete[] で解放する。
+	delete[] (char*)cache.data;
 	ICCProfileTransform::DeleteTransform(cache.transform);
 	// Setting the decoder and runner to 0 (NULL) will automatically destroy them
 	cache = { 0 };

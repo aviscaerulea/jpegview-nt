@@ -20,6 +20,8 @@ public:
 		Type = 0;
 	}
 
+	virtual ~CRequestBase() = default;
+
 	int Type; // Can be used to set the type of the request, default is 0
 	HANDLE EventFinished; // Event signaled when processing is finished
 	volatile LONG* EventFinishedCounter; // if not NULL, this counter is decremented after having handled the request and the event is not fired until it gets zero

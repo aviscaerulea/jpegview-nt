@@ -120,11 +120,14 @@ static EImageFormat GetBitmapFormat(Gdiplus::Bitmap * pBitmap) {
 	}
 }
 
-static CJPEGImage* ConvertGDIPlusBitmapToJPEGImage(Gdiplus::Bitmap* pBitmap, int nFrameIndex, void* pEXIFData, 
+static CJPEGImage* ConvertGDIPlusBitmapToJPEGImage(Gdiplus::Bitmap* pBitmap, int nFrameIndex, void* pEXIFData,
 	__int64 nJPEGHash, bool &isOutOfMemory, bool &isAnimatedGIF) {
 
 	isOutOfMemory = false;
 	isAnimatedGIF = false;
+	if (pBitmap == NULL) {
+		return NULL;
+	}
 	Gdiplus::Status lastStatus = pBitmap->GetLastStatus();
 	if (lastStatus != Gdiplus::Ok) {
 		isOutOfMemory = lastStatus == Gdiplus::OutOfMemory;
@@ -856,6 +859,10 @@ void CImageLoadThread::ProcessReadJXLRequest(CRequest* request) {
 	SetErrorMode(nPrevErrorMode);
 	if (!bUseCachedDecoder) {
 		::CloseHandle(hFile);
+		// pBuffer は JxlReader 内部の静的 cache.data に共有保持される。
+		// ここで delete[] するとアニメーション JXL の次フレーム要求時にダングリングポインタを参照、
+		// または DeleteCachedJxlDecoder() の free(cache.data) で二重解放となる。
+		// 解放は DeleteCachedJxlDecoder() に一元化される。
 		// delete[] pBuffer;
 	}
 }
