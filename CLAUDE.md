@@ -203,7 +203,7 @@ Windows Template Library (WTL) ベース。`Panel` / `PanelMgr` による UI パ
 - `ImageLoadThread`（`CWorkThread` 派生）で非同期画像読み込み
 - `ProcessingThreadPool` で物理コア数分の並列画像処理（上限 64、INI で設定可能）
 - AVIF デコーダのスレッド数も INI 設定値を使用（`CPUCoresUsed`）
-- HEIF デコーダのスレッド数も INI 設定値を使用（`CPUCoresUsed`）
+- HEIF デコーダのタイル並列数は libheif の既定に従う（1.23.1 で C++ ラッパの設定 API が削除されたため）
 - HEIF アルファブレンド処理の並列化（10 万ピクセル以上で最大 8 スレッド）
 - 先読みバッファリング（INI 設定 `ReadAheadBuffers` で 2～8 バッファ、デフォルト 5）
 
