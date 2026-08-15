@@ -10,7 +10,10 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest
+    # Temporary pin: windows-latest moved to VS2026, which lacks both the v143 ATL headers
+    # and stdext::hash_map. Revert to windows-latest once hash_map is migrated to
+    # unordered_map, since the windows-2022 image will eventually be retired.
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v5
         with:
