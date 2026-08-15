@@ -1,210 +1,105 @@
-[![Latest GitHub Release](https://img.shields.io/github/v/release/aviscaerulea/jpegview-nt?label=GitHub&style=social)](https://github.com/aviscaerulea/jpegview-nt/releases)[![Downloads](https://badgen.net/github/assets-dl/aviscaerulea/jpegview-nt?cache=3600&color=grey&label=)](#)
-
-**JPEGView-nt** は [sylikc/jpegview](https://github.com/sylikc/jpegview) v1.3.46.0 からフォークした個人カスタマイズ版です。  
-HEIC/HEIF 表示対応、SVG 表示対応、AVX2/マルチスレッドによる CPU 最適化。  
-他、依存ライブラリを最新版への更新（libjpeg-turbo 3.2.0、libpng 1.6.54、libwebp 1.6.0、libjxl 0.12.0、libheif 1.23.1、LibRaw 0.22.2 など）を行っています。
-
-## Installation
-
-Scoop でもインストール可能です。
-
-```
-scoop bucket add https://github.com/aviscaerulea/scoop-bucket
-scoop install jpegview-nt
-```
-<br><br>
-
----
-[![Documentation](https://img.shields.io/badge/Docs-Outdated-yellowgreen)](https://htmlpreview.github.io/?https://github.com/sylikc/jpegview/blob/master/src/JPEGView/Config/readme.html) [![Localization Progress](https://img.shields.io/badge/Localized-91%25-blueviolet)](#Localization) [![Build x64](https://github.com/sylikc/jpegview/actions/workflows/build-release-x64.yml/badge.svg?branch=master)](https://github.com/sylikc/jpegview/actions/workflows/build-release-x64.yml) [![OS Support](https://img.shields.io/badge/Windows-XP%20%7C%207%20%7C%208%20%7C%2010%20%7C%2011-blue)](#) [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-blue)](https://github.com/sylikc/jpegview/blob/master/LICENSE.txt)
-
-[![Latest GitHub Release](https://img.shields.io/github/v/release/sylikc/jpegview?label=GitHub&style=social)](https://github.com/sylikc/jpegview/releases)[![Downloads](https://badgen.net/github/assets-dl/sylikc/jpegview?cache=3600&color=grey&label=)](#) [![WinGet](https://repology.org/badge/version-for-repo/winget/jpegview.svg?allow_ignored=1&header=WinGet)](https://winstall.app/apps/sylikc.JPEGView) [![PortableApps](https://img.shields.io/badge/PortableApps-Current-green)](https://portableapps.com/apps/graphics_pictures/jpegview_portable) [![Scoop](https://repology.org/badge/version-for-repo/scoop/jpegview-fork.svg?header=Scoop)](https://scoop.sh/#/apps?q=%22jpegview-fork%22) [![Chocolatey](https://img.shields.io/chocolatey/v/jpegview)](https://community.chocolatey.org/packages/jpegview) [![Npackd](https://repology.org/badge/version-for-repo/npackd_stable/jpegview.svg?allow_ignored=1&header=Npackd)](https://www.npackd.org/p/jpegview)
-
 # JPEGView-nt
+[![日本語](https://img.shields.io/badge/lang-日本語-red)](README.md)
+[![English](https://img.shields.io/badge/lang-English-blue)](README.en.md)
+[![Release](https://img.shields.io/github/v/release/aviscaerulea/jpegview-nt)](https://github.com/aviscaerulea/jpegview-nt/releases/latest)
+[![License](https://img.shields.io/github/license/aviscaerulea/jpegview-nt)](LICENSE)
+[![Build](https://github.com/aviscaerulea/jpegview-nt/actions/workflows/release.yml/badge.svg)](https://github.com/aviscaerulea/jpegview-nt/actions/workflows/release.yml)
 
-This is the official re-release of JPEGView.
+JPEGView-nt は、Windows 向けの軽量で高速な画像ビューアです。[sylikc/jpegview](https://github.com/sylikc/jpegview) の `v1.3.46.0` からフォークし、対応形式と表示速度を強化した個人カスタマイズ版です。HEIC/HEIF と SVG の表示に対応し、AVX2 命令とマルチスレッド処理によって大きな画像でも待たされずに閲覧できます。
 
-## Description
+## 機能
 
-JPEGView is a lean, fast and highly configurable image viewer/editor with a minimal GUI.
+- 対応形式：JPEG、PNG、WebP、HEIC/HEIF、AVIF、JPEG XL、SVG、カメラ RAW など 19 形式を内蔵対応
+- 高速表示：SIMD 演算、マルチスレッド処理、先読みキャッシュの組み合わせによる表示の高速化
+- 画像調整：シャープネス、色調、コントラスト、回転、遠近補正を表示したまま適用
+- スライドショー：フォルダ内の画像を連続再生
+- ポータブル動作：インストール不要で、展開したフォルダのまま実行可能
+- 多言語 UI：28 言語に対応し、Windows のロケールを自動判定
 
-### Formats Supported
+### 対応画像形式
 
-JPEGView has built-in support the following formats:
+| 区分 | 形式 |
+| --- | --- |
+| 一般 | JPEG（jpg, jpeg, jfif）、PNG（APNG を含む）、GIF、BMP、TIFF |
+| 新しい形式 | WebP、JPEG XL、HEIF/HEIC、AVIF、QOI |
+| ベクタ | SVG、SVGZ |
+| その他 | TGA、PSD/PSB |
+| カメラ RAW | DNG、CR2/CR3、NEF、ARW、ORF、RW2、RAF ほか |
+| WIC 経由 | WDP、HDP、JXR |
 
-* Popular: JPEG, GIF
-* Lossless: BMP, PNG, TIFF, PSD
-* Web: WEBP, JXL, HEIF/HEIC, AVIF
-* Vector: SVG, SVGZ
-* Legacy: TGA, WDP, HDP, JXR
-* Camera RAW formats:
-  * Adobe (DNG), Canon (CRW, CR2, CR3), Nikon (NEF, NRW), Sony (ARW, SR2)
-  * Olympus (ORF), Panasonic (RW2), Fujifilm (RAF)
-  * Sigma (X3F), Pentax (PEF), Minolta (MRW), Kodak (KDC, DCR)
-  * A full list is available here: [LibRaw supported cameras](https://www.libraw.org/supported-cameras)
+カメラ RAW の詳細な対応機種は [LibRaw supported cameras](https://www.libraw.org/supported-cameras) を参照してください。上記以外の形式も、Windows が対応していれば Windows Imaging Component 経由で表示します。
 
-Many additional formats are supported by Windows Imaging Component (WIC)
+### フォーク元からの変更点
 
-### Basic Image Editor
+| 分類 | 内容 |
+| --- | --- |
+| 表示形式 | SVG/SVGZ の表示に対応。HEIC は読み込みに失敗すると Windows 標準の機能で再試行 |
+| 高速化 | AVX2 命令の有効化、並列処理の上限を 64 スレッドへ拡大、メモリ確保の高速化 |
+| 依存ライブラリ | libjpeg-turbo、libpng、libwebp、libjxl、libheif、LibRaw などを最新版へ更新 |
 
-Basic on-the-fly image processing is provided - allowing adjusting typical parameters:
+## インストール
 
-* sharpness
-* color balance
-* rotation
-* perspective
-* contrast
-* local under-exposure/over-exposure
+### 動作要件
 
-### Other Features
+- Windows 10/11 の 64bit 版
+- AVX2 に対応した CPU
 
-* Small and fast, uses AVX2/SSE2 and up to 64 CPU cores
-* High quality resampling filter, preserving sharpness of images
-* Basic image processing tools can be applied realtime during viewing
-* Movie/Slideshow mode - to play folder of JPEGs as movie
+### 手順
 
-# Installation
+#### リリースの ZIP から
 
-## Official Releases
+[リリースページ](https://github.com/aviscaerulea/jpegview-nt/releases/latest)から ZIP をダウンロードします。次に任意の場所へ展開します。展開したフォルダの `JPEGView.exe` をそのまま実行できます。
 
-Official releases will be made to [sylikc's GitHub Releases](https://github.com/sylikc/jpegview/releases) page.  Each release includes:
+初期状態では設定を実行ファイルと同じフォルダへ保存するため、書き込みできない `Program Files` 配下には置かないでください。
 
-* **Archive Zip/7z** - Portable
-* **Windows Installer MSI** - For Installs
-* **Source code** - Build it yourself
-
-## Portable
-
-JPEGView _does not require installation_ to run.  Just **unzip, and run** either the 64-bit version, or the 32-bit version depending on which platform you're on.  It can save the settings to the extracted folder and run entirely portable.
-
-## MSI Installer
-
-For those who prefer to have JPEGView installed for All Users, a 32-bit/64-bit installer is available to download starting with v1.0.40.
-
-(Unfortunately, I don't own a code signing certificate yet, so the MSI release is not signed.  Please verify checksums!)
-
-### WinGet
-
-If you're on Windows 11, or Windows 10 (build 1709 or later), you can also download it directly from the official [Microsoft WinGet tool](https://docs.microsoft.com/en-us/windows/package-manager/winget/) repository.  This downloads the latest MSI installer directly from GitHub for installation.
-
-Example Usage:
-
-C:\> `winget search jpegview`
-```
-Name     Id              Version  Source
------------------------------------------
-JPEGView sylikc.JPEGView 1.1.43  winget
-```
-
-C:\> `winget install jpegview`
-```
-Found JPEGView [sylikc.JPEGView] Version 1.1.43
-This application is licensed to you by its owner.
-Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
-Downloading https://github.com/sylikc/jpegview/releases/download/v1.1.43/JPEGView64_en-us_1.1.43.msi
-  ██████████████████████████████  4.23 MB / 4.23 MB
-Successfully verified installer hash
-Starting package install...
-Successfully installed
-```
-
-## PortableApps
-
-Another option is to use the official [JPEGView on PortableApps](https://portableapps.com/apps/graphics_pictures/jpegview_portable) package.  The PortableApps launcher preserves user settings in a separate directory from the extracted application directory.  This release is signed.
-
-## Scoop
-
-[Scoop](https://scoop.sh/) is a Windows command-line installer and manager for portable applications.
-
-To install with Scoop, run the following commands:
-
-```shell
-scoop bucket add extras
-scoop install extras/jpegview-fork
-```
-
-After installation, the configuration file is located at `%UserProfile%\scoop\persist\JPEGView-fork\JPEGView.ini`.
-
-### JPEGView-nt (this fork)
+#### Scoop から
 
 ```shell
 scoop bucket add aviscaerulea https://github.com/aviscaerulea/scoop-bucket
 scoop install jpegview-nt
 ```
 
-## System Requirements
+## 使い方
 
-* 64-bit version: Windows 7/8/10/11 64-bit or later
-* 32-bit version: Windows 7 or later
-  * A special _32-bit Windows XP SP2_ build is available, which supports most formats (except for formats added after v1.0.37.1, ex. Animated PNG, JXL, HEIC).  Other features and options are the same as the normal builds.
+`JPEGView.exe` に画像ファイルをドラッグするか、エクスプローラの「プログラムから開く」で `JPEGView.exe` を選ぶと画像を表示します。表示した画像と同じフォルダ内の画像を、そのまま順に閲覧できます。
 
-## What's New
+主なキー操作は次のとおりです。
 
-* See what has changed in the [latest releases](https://github.com/sylikc/jpegview/releases)
-* Or Check the [CHANGELOG.txt](https://github.com/sylikc/jpegview/blob/master/CHANGELOG.txt) to review new features in detail.
+| 操作 | 動作 |
+| --- | --- |
+| ← / → | 前後の画像へ移動 |
+| マウスホイール | 前後の画像へ移動 |
+| Space | 画面に合わせる表示と等倍表示の切り替え |
+| Ctrl + ↑ / ↓ | 拡大、縮小 |
+| F11 | 全画面表示の切り替え |
+| Ctrl + N | ナビゲーションパネルの表示切り替え |
+| Ctrl + C | 画像をクリップボードへコピー |
+| Ctrl + S | 画像を保存 |
 
-# Localization
+回転、クロップ、傾き補正などの編集パネルは、画面下部のナビゲーションパネルから開きます。
 
-By default, the language is auto-detected to match your Windows Locale.  All the text in the menus and user interface should show in your language.  To override the auto-detection, manually set `Language` option in `JPEGView.ini`
+## 設定
 
-JPEGView is currently translated/localized to 28 languages:
+設定は実行ファイルと同じフォルダの `JPEGView.ini` に保存します。各項目には日本語の説明を付けているため、詳細はファイル内のコメントを参照してください。
 
-| INI Option | Language |
-| ---------- | -------- |
-| be | Belarusian |
-| bg | Bulgarian |
-| cs | Czech |
-| de | German |
-| el | Greek, Modern |
-| es-ar | Spanish (Argentina) |
-| es | Spanish |
-| eu | Basque |
-| fi | Finnish |
-| fr | French (Français) |
-| hu | Hungarian |
-| it | Italian |
-| ja | Japanese (日本語) |
-| ko | Korean (한국어) |
-| pl | Polish |
-| pt-br | Portuguese (Brazilian) |
-| pt | Portuguese |
-| ro | Romanian |
-| ru | Russian (Русский) |
-| sk | Slovak |
-| sl | Slovenian (Slovenščina) |
-| sr | Serbian (српски) |
-| sv | Swedish |
-| ta | Tamil |
-| tr | Turkish (Türkçe) |
-| uk | Ukrainian (Українська) |
-| zh-tw | Chinese, Traditional (繁體中文) |
-| zh | Chinese, Simplified (简体中文) |
+| 項目 | 内容 |
+| --- | --- |
+| `StoreToEXEPath` | 設定の保存先。true で実行ファイルと同じフォルダ、false でユーザのアプリデータフォルダ |
+| `CPUCoresUsed` | 画像処理に使う CPU コア数。0 で自動検出 |
+| `ReadAheadBuffers` | 先読みバッファ数。大きいほど連続閲覧が速くなり、メモリ使用量が増える |
+| `Language` | UI の言語。auto で Windows のロケールに追従 |
 
-See the [Localization wiki page](https://github.com/sylikc/jpegview/wiki/Localization#localization-status) for translation status for each language.
+キーの割り当ては、同じフォルダの `KeyMap.txt` で変更します。
 
-# Help / Documentation
+## 制限事項
 
-The JPEGView documentation is a little out of the date at the moment, but should still give a good summary of the features.
+- 配布は 64bit 版のみで、32bit 版と MSI インストーラは提供しない
+- AVX2 に対応しない CPU では起動できない
+- 実行ファイルにコード署名がないため、初回起動時に SmartScreen の警告が出る
+- 同梱ドキュメント（`doc` フォルダ）はフォーク元のもので、本フォークの変更点は反映していない
 
-This [readme.html](https://htmlpreview.github.io/?https://github.com/sylikc/jpegview/blob/master/src/JPEGView/Config/readme.html) is part of the JPEGView package.
+## ライセンス
 
-# Brief History
+本体は GNU General Public License v2 です。詳細は [LICENSE](LICENSE) を参照してください。
 
-This GitHub repo continues the legacy (is a "fork") of the excellent project [JPEGView by David Kleiner](https://sourceforge.net/projects/jpegview/).  Unfortunately, starting in 2020, the SourceForge project has essentially been abandoned, with the last update being [2018-02-24 (1.0.37)](https://sourceforge.net/projects/jpegview/files/jpegview/).  It's an excellent lightweight image viewer that I use almost daily!
-
-The starting point for this repo was a direct clone from SourceForge SVN to GitHub Git.  By continuing this way, it retains all previous commits and all original author comments.
-
-I'm hoping with this project, some devs might help me keep the project alive!  It's been awhile, and could use some new features or updates.  Looking forward to the community making suggestions, and devs will help with some do pull requests as some of the image code is quite a learning curve for me to pick it up. -sylikc
-
-## Special Thanks
-
-Special thanks to [qbnu](https://github.com/qbnu) for adding additional codec support!
-* Animated WebP
-* Animated PNG
-* JPEG XL with animation support
-* HEIF/HEIC/AVIF support
-* QOI support
-* ICC Profile support for WebP, JPEG XL, HEIF/HEIC, AVIF
-* LibRaw support (all updated RAW formats, such as CR3)
-* Photoshop PSD support
-
-Thanks to all the _translators_ which keep JPEGView strings up-to-date in different languages!  See [CHANGELOG.txt](https://github.com/sylikc/jpegview/blob/master/CHANGELOG.txt) to find credits for translators at each release!
+同梱する libheif、libde265、LibRaw は LGPL のため、静的リンクせず DLL として配布しています。利用者はこれらの DLL を差し替えられます。
