@@ -326,13 +326,11 @@ bool CParameterDBEntry::HasZoomOffsetStored() const {
 // CParameterDB
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-CParameterDB* CParameterDB::sm_instance = NULL;
-
 CParameterDB& CParameterDB::This() {
-	if (sm_instance == NULL) {
-		sm_instance = new CParameterDB();
-	}
-	return *sm_instance;
+	// マジックスタティックで生成をスレッド安全化（先読みスレッドが同時に初回呼び出しするため）
+	// ヒープ確保のまま意図的にリークさせ、終了処理後も残存スレッドから安全に参照できるようにする
+	static CParameterDB* instance = new CParameterDB();
+	return *instance;
 }
 
 CString CParameterDB::GetParamDBName() {
@@ -492,7 +490,7 @@ CParameterDB::CParameterDB(void)
 }
 
 CParameterDB::~CParameterDB(void) {
-	// not implemented, never deleted (singleton)
+	// シングルトンは意図的にリークさせるため呼ばれない
 }
 
 CParameterDBEntry* CParameterDB::FindEntryInternal(__int64 nHash, int& nIndex) {
@@ -544,7 +542,9 @@ CParameterDB::DBBlock* CParameterDB::LoadFromFile(const CString& sParamDBName, b
 	}
 
 	// file exists, open it
-	HANDLE hFile = ::CreateFile(sParamDBName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	// 読み込み同士の共有を許可する（排他だと同時起動時に共有違反となる）
+	// 書き込みとの共有は許可しない（書き込み途中の不完全なデータを読まないため）
+	HANDLE hFile = ::CreateFile(sParamDBName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE) {
 		HandleErrorAndCloseHandle(errorOpenFailed, sParamDBName, 0);
 		return NULL;
@@ -611,7 +611,8 @@ bool CParameterDB::SaveToFile(int nIndex, const CParameterDBEntry & dbEntry) {
 		::CreateDirectory(Helpers::JPEGViewAppDataPath(), NULL);
 	}
 
-	HANDLE hFile = ::CreateFile(sParamDBName, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	// 読み込みのみ共有を許可する（書き込み同士はデータ保護のため排他を維持）
+	HANDLE hFile = ::CreateFile(sParamDBName, GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hFile == INVALID_HANDLE_VALUE) {
 		HandleErrorAndCloseHandle(errorOpenFailed, sParamDBName, 0);
 		return false;

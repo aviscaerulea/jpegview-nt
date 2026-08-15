@@ -121,7 +121,6 @@ private:
 
 	CRITICAL_SECTION m_csDBLock;
 
-	static CParameterDB* sm_instance;
 	std::list<DBBlock*> m_blockList;
 	__int64 m_LRUHash;
 	CParameterDBEntry* m_pLRUEntry;
