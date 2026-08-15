@@ -34,6 +34,7 @@ JPEGView has built-in support the following formats:
 * Popular: JPEG, GIF
 * Lossless: BMP, PNG, TIFF, PSD
 * Web: WEBP, JXL, HEIF/HEIC, AVIF
+* Vector: SVG, SVGZ
 * Legacy: TGA, WDP, HDP, JXR
 * Camera RAW formats:
   * Adobe (DNG), Canon (CRW, CR2, CR3), Nikon (NEF, NRW), Sony (ARW, SR2)
@@ -56,7 +57,7 @@ Basic on-the-fly image processing is provided - allowing adjusting typical param
 
 ### Other Features
 
-* Small and fast, uses AVX2/SSE2 and up to 4 CPU cores
+* Small and fast, uses AVX2/SSE2 and up to 64 CPU cores
 * High quality resampling filter, preserving sharpness of images
 * Basic image processing tools can be applied realtime during viewing
 * Movie/Slideshow mode - to play folder of JPEGs as movie
