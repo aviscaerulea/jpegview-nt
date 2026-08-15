@@ -7,7 +7,7 @@
  * Lossless JPEG Modifications:
  * Copyright (C) 1999, Ken Murchison.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2014, 2017, 2021-2022, D. R. Commander.
+ * Copyright (C) 2014, 2017, 2021-2023, 2026, D. R. Commander.
  * For conditions of distribution and use, see the accompanying README.ijg
  * file.
  *
@@ -111,7 +111,7 @@ JMESSAGE(JERR_NOT_COMPILED, "Requested feature was omitted at compile time")
 #if JPEG_LIB_VERSION >= 70
 JMESSAGE(JERR_NO_ARITH_TABLE, "Arithmetic table 0x%02x was not defined")
 #endif
-JMESSAGE(JERR_NO_BACKING_STORE, "Backing store not supported")
+JMESSAGE(JERR_NO_BACKING_STORE, "Memory limit exceeded")
 JMESSAGE(JERR_NO_HUFF_TABLE, "Huffman table 0x%02x was not defined")
 JMESSAGE(JERR_NO_IMAGE, "JPEG datastream contains no image")
 JMESSAGE(JERR_NO_QUANT_TABLE, "Quantization table 0x%02x was not defined")
@@ -137,7 +137,7 @@ JMESSAGE(JERR_VIRTUAL_BUG, "Virtual array controller messed up")
 JMESSAGE(JERR_WIDTH_OVERFLOW, "Image too wide for this implementation")
 JMESSAGE(JERR_XMS_READ, "Read from XMS failed")
 JMESSAGE(JERR_XMS_WRITE, "Write to XMS failed")
-JMESSAGE(JMSG_COPYRIGHT, JCOPYRIGHT_SHORT)
+JMESSAGE(JMSG_COPYRIGHT, JCOPYRIGHT)
 JMESSAGE(JMSG_VERSION, JVERSION)
 JMESSAGE(JTRC_16BIT_TABLES,
          "Caution: quantization tables are too coarse for baseline JPEG")
@@ -272,7 +272,7 @@ JMESSAGE(JERR_BAD_RESTART,
    (*(cinfo)->err->error_exit) ((j_common_ptr)(cinfo)))
 #define ERREXITS(cinfo, code, str) \
   ((cinfo)->err->msg_code = (code), \
-   strncpy((cinfo)->err->msg_parm.s, (str), JMSG_STR_PARM_MAX), \
+   strncpy((cinfo)->err->msg_parm.s, (str), JMSG_STR_PARM_MAX - 1), \
    (cinfo)->err->msg_parm.s[JMSG_STR_PARM_MAX - 1] = '\0', \
    (*(cinfo)->err->error_exit) ((j_common_ptr)(cinfo)))
 

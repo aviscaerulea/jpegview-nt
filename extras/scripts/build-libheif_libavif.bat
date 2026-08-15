@@ -149,7 +149,8 @@ call "%~dp0vs-init.bat" %1
 pushd "%XBUILD_DIR%"
 cmake.exe -DCMAKE_BUILD_TYPE=Release -A %2 "%XLIB_DIR%"
 IF ERRORLEVEL 1 exit /b 1
-msbuild.exe /p:Platform=%2 /p:configuration="Release" libde265.sln /t:de265
+REM CMake 4.x VS generator emits .slnx instead of .sln
+msbuild.exe /p:Platform=%2 /p:configuration="Release" libde265.slnx /t:de265
 IF ERRORLEVEL 1 exit /b 1
 
 
@@ -194,7 +195,8 @@ pushd "%XBUILD_DIR%"
 
 cmake.exe -DCMAKE_BUILD_TYPE=Release -A %2 -DDAV1D_LIBRARY="%XDAV1D_DIST%\lib\dav1d.lib" -DDAV1D_INCLUDE_DIR="%XDAV1D_DIST%\include" -DLIBDE265_LIBRARY="%XDE265_BUILD%\libde265\Release\de265.lib" -DLIBDE265_INCLUDE_DIR="%XDE265_DIR%" "%XLIB_DIR%\libheif"
 IF ERRORLEVEL 1 exit /b 1
-msbuild.exe /p:Platform=%2 /p:configuration="Release" libheif.sln /t:heif
+REM CMake 4.x VS generator emits .slnx instead of .sln
+msbuild.exe /p:Platform=%2 /p:configuration="Release" libheif.slnx /t:heif
 IF ERRORLEVEL 1 exit /b 1
 
 popd
@@ -239,7 +241,8 @@ REM not sure if there's any diff using nmake vs ninja
 
 REM derived from https://github.com/AOMediaCodec/libavif/blob/main/.github/workflows/ci-windows.yml
 ::cmake.exe -G"NMake Makefiles" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DAVIF_CODEC_DAV1D=ON -DDAV1D_LIBRARY="%XDAV1D_DIST%\lib\dav1d.lib" -DDAV1D_INCLUDE_DIR="%XDAV1D_DIST%\include" "%XLIBAVIF_DIR%"
-cmake.exe -G Ninja -DCMAKE_BUILD_TYPE=Release -DAVIF_CODEC_DAV1D=ON -DDAV1D_LIBRARY="%XDAV1D_DIST%\lib\dav1d.lib" -DDAV1D_INCLUDE_DIR="%XDAV1D_DIST%\include" "%XLIBAVIF_DIR%"
+REM libavif 1.4.x errors out when libyuv is missing; keep parity with previous DLLs (no libyuv)
+cmake.exe -G Ninja -DCMAKE_BUILD_TYPE=Release -DAVIF_CODEC_DAV1D=ON -DAVIF_LIBYUV=OFF -DDAV1D_LIBRARY="%XDAV1D_DIST%\lib\dav1d.lib" -DDAV1D_INCLUDE_DIR="%XDAV1D_DIST%\include" "%XLIBAVIF_DIR%"
 IF ERRORLEVEL 1 exit /b 1
 ::nmake.exe
 ninja.exe

@@ -55,13 +55,15 @@ pushd "%XBUILD_DIR%"
 
 cmake.exe -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF -A %XPLATFORM% "%XLIB_DIR%"
 IF ERRORLEVEL 1 exit /b 1
-msbuild.exe /p:Platform=%XPLATFORM% /p:configuration="Release" LIBJXL.sln /t:jxl_dec /t:jxl_threads
+REM CMake 4.x VS generator emits .slnx instead of .sln
+msbuild.exe /p:Platform=%XPLATFORM% /p:configuration="Release" LIBJXL.slnx /t:jxl_dec /t:jxl_threads
 IF ERRORLEVEL 1 exit /b 1
 
 popd
 
 REM copy the libs over
-copy /y "%XBUILD_DIR%\Release\jxl*.dll" "%XSRC_DIR%\JPEGView\libjxl\bin%XJPV_ARCH_PATH%\"
+REM libjxl 0.12 emits DLLs under lib\Release instead of Release
+copy /y "%XBUILD_DIR%\lib\Release\jxl*.dll" "%XSRC_DIR%\JPEGView\libjxl\bin%XJPV_ARCH_PATH%\"
 IF ERRORLEVEL 1 exit /b 1
 copy /y "%XBUILD_DIR%\third_party\brotli\Release\brotli*.dll" "%XSRC_DIR%\JPEGView\libjxl\bin%XJPV_ARCH_PATH%\"
 IF ERRORLEVEL 1 exit /b 1

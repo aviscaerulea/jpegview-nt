@@ -2,7 +2,7 @@
 
 **JPEGView-nt** は [sylikc/jpegview](https://github.com/sylikc/jpegview) v1.3.46.0 からフォークした個人カスタマイズ版です。  
 HEIC/HEIF 表示対応、SVG 表示対応、AVX2/マルチスレッドによる CPU 最適化。  
-他、依存ライブラリを最新版への更新（libjpeg-turbo 3.1.3、libpng 1.6.54、libwebp 1.6.0、libjxl 0.11.1、libheif 1.21.2、LibRaw 0.22.0 など）を行っています。
+他、依存ライブラリを最新版への更新（libjpeg-turbo 3.2.0、libpng 1.6.54、libwebp 1.6.0、libjxl 0.12.0、libheif 1.23.1、LibRaw 0.22.2 など）を行っています。
 
 ## Installation
 
