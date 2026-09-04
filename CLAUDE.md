@@ -38,18 +38,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | **zlib** | 1.3 | **1.3.1.2** | マイナー更新 |
 | **libwebp** | 1.3.2 | **1.6.0** | AVX2/SSE2 最適化追加 |
 | **libjxl** | 0.9-snapshot | **0.12.0** | CVE 4 件修正、デコード性能改善 |
-| **libheif** | 1.19.8 | **1.23.1** | CVE 25 件超修正、unci 読み込み高速化 |
-| **libde265** | 1.0.16 | **1.1.1** | CVE 6 件修正、x86 デコード約 8% 高速化 |
+| **libheif** | 1.19.8 | **1.23.3** | CVE 修正多数（1.23.2〜1.23.3 で critical 3 件を含む）、unci 読み込み高速化 |
+| **libde265** | 1.0.16 | **1.1.2** | CVE 8 件修正、x86 デコード約 8% 高速化、民生機 HEIF の VUI 不正値で SPS を拒否する回帰を修正 |
 | **libavif** | 1.3.0 | **1.4.2** | 堅牢性修正、16bit AVIF 対応 |
 | **dav1d** | 1.5.1 | **1.5.4** | マルチスレッドスケジューリング改善 |
 | **LibRaw** | 0.21.1 | **0.22.2** | DNG 1.7 対応追加、TALOS 報告 6 件修正 |
-| **lcms2** | 2.15 | **2.18** | セキュリティ修正含む |
+| **lcms2** | 2.15 | **2.19.1** | セキュリティ修正含む、CMake ビルド対応 |
 | **lunasvg** | - | **（静的リンク）** | SVG レンダリングライブラリ（plutovg + zlib） |
 
 ## ビルド
 
-- **IDE**: Visual Studio 2026 (PlatformToolset v143)
-- **GHA ランナー**: `windows-2022` に固定（`windows-latest` は VS2026 へ移行済みで、v143 の ATL と `hash_map` を欠くためビルドできない）
+- **IDE**: Visual Studio 2026
+- **PlatformToolset**: vcxproj は v143 固定。v143 を含まない VS2026 系（Build Tools 18 等）では `/p:PlatformToolset=v145` で上書きする（`stdext::hash_map` は `std::unordered_map` へ移行済みで v145 でもビルドできる）
+- **GHA ランナー**: `windows-2022` に固定（`windows-latest` は VS2026 のみで v143 を欠く。v145 でのリリースビルドを確認できれば `windows-latest` へ戻せる）
 - **ソリューション**: `src/JPEGView.sln`
 - **ビルド構成**: Release|x64（当 PC 向け）
 - **C++ 標準**: C++17
@@ -60,9 +61,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **重要**: ビルドコマンドは**必ずソリューションファイル（`src/JPEGView.sln`）を指定**すること。プロジェクトファイル（`src/JPEGView/JPEGView.vcxproj`）を直接ビルドすると、`$(SolutionDir)` マクロが正しく展開されず、ポストビルドイベントで「指定されたパスが見つかりません」エラーが発生する。
 
-正しいビルドコマンド例:
+正しいビルドコマンド例（v143 が入った VS では `/p:PlatformToolset=v145` を省略できる）:
 ```pwsh
-pwsh -Command "Enable-VSDev; msbuild src/JPEGView.sln /p:Configuration=Release /p:Platform=x64 /t:Rebuild /m:8 /v:minimal /nologo"
+pwsh -Command "Enable-VSDev; msbuild src/JPEGView.sln /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v145 /t:Rebuild /m:8 /v:minimal /nologo"
 ```
 
 ### タスクランナー（go-task）
@@ -203,8 +204,8 @@ Windows Template Library (WTL) ベース。`Panel` / `PanelMgr` による UI パ
 - `ImageLoadThread`（`CWorkThread` 派生）で非同期画像読み込み
 - `ProcessingThreadPool` で物理コア数分の並列画像処理（上限 64、INI で設定可能）
 - AVIF デコーダのスレッド数も INI 設定値を使用（`CPUCoresUsed`）
-- HEIF デコーダのタイル並列数は libheif の既定に従う（1.23.1 で C++ ラッパの設定 API が削除されたため）
-- HEIF アルファブレンド処理の並列化（10 万ピクセル以上で最大 8 スレッド）
+- HEIF デコーダのタイル並列数も INI 設定値を使用（`CPUCoresUsed`。C++ ラッパから消えた設定 API を C API `heif_context_set_max_decoding_threads` で呼ぶ）
+- アルファブレンド処理の並列化（WebP/PNG/JXL/AVIF/HEIF/QOI 共通の `AlphaBlendBackgroundParallel`、10 万ピクセル以上で最大 8 スレッド）
 - 先読みバッファリング（INI 設定 `ReadAheadBuffers` で 2～8 バッファ、デフォルト 5）
 
 ### パフォーマンス最適化
@@ -237,7 +238,7 @@ JPEGView の高速表示は以下 6 層の最適化技術の組み合わせで�
 - **キャッシュ最適化**: ストリップあたり最大 10 万ピクセルに制限し、L2/L3 キャッシュに収まるサイズを維持
 - **アラインメント**: AVX2 は 16 ピクセル境界、SSE は 8 ピクセル境界でストリップ高を調整
 
-並列化対象: HQ リサイズ、LDC、ガウスフィルタ、アンシャープマスク、HQ 回転、台形補正、AVIF デコード、HEIF アルファブレンド
+並列化対象: HQ リサイズ、LDC、ガウスフィルタ、アンシャープマスク、HQ 回転、台形補正、AVIF デコード、透過形式のアルファブレンド
 
 #### 3. 先読みバッファリング
 
