@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hash_map>
+#include <unordered_map>
 
 #define VK_LBUTTONDBLCLK 7
 
@@ -29,7 +29,7 @@ public:
 private:
 
 	// key is the key code, value the command ID
-	stdext::hash_map<int, int> m_keyMap;
+	std::unordered_map<int, int> m_keyMap;
 
 	void AddDefaultEscapeHandling();
 };

@@ -10,9 +10,10 @@ permissions:
 
 jobs:
   build:
-    # Temporary pin: windows-latest moved to VS2026, which lacks both the v143 ATL headers
-    # and stdext::hash_map. Revert to windows-latest once hash_map is migrated to
-    # unordered_map, since the windows-2022 image will eventually be retired.
+    # Temporary pin: windows-latest moved to VS2026, which lacks the v143 toolset.
+    # stdext::hash_map has been migrated to std::unordered_map, so the code builds with v145;
+    # switch to windows-latest (building with /p:PlatformToolset=v145) once verified,
+    # since the windows-2022 image will eventually be retired.
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v5

@@ -2,7 +2,7 @@
 #include "NLS.h"
 #include "SettingsProvider.h"
 
-stdext::hash_map<LPCTSTR, LPCTSTR, CHashCompareLPCTSTR> CNLS::sm_texts;
+LPCTSTRHashMap<LPCTSTR> CNLS::sm_texts;
 bool CNLS::sm_bTableRead = false;
 
 
@@ -89,7 +89,7 @@ LPCTSTR CNLS::GetString(LPCTSTR sString) {
 	if (!sm_bTableRead) {
 		return sString; // no translation available, use English
 	}
-	hash_map<LPCTSTR, LPCTSTR, CHashCompareLPCTSTR>::const_iterator iter;
+	LPCTSTRHashMap<LPCTSTR>::const_iterator iter;
 	iter = sm_texts.find(sString);
 	if (iter == sm_texts.end()) {
 		return sString; // not found

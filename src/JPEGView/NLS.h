@@ -1,9 +1,6 @@
 #pragma once
 
 #include "HashCompareLPCTSTR.h"
-#include <hash_map>
-
-using namespace stdext;
 
 // Supports translation of texts from English to a target language using text files
 // with (key, value) pairs and English text as key and translated text as value.
@@ -27,6 +24,6 @@ private:
 	CNLS(void);
 	~CNLS(void);
 
-	static stdext::hash_map<LPCTSTR, LPCTSTR, CHashCompareLPCTSTR> sm_texts;
+	static LPCTSTRHashMap<LPCTSTR> sm_texts;
 	static bool sm_bTableRead;
 };
