@@ -5,6 +5,26 @@
 #include "ICCProfileTransform.h"
 #include "SettingsProvider.h"
 
+#include <memory>
+#include <vector>
+
+// libheif is called through its C API: the C++ wrapper (heif_cxx.h) lost set_max_decoding_threads
+// in v1.23 and gives no access to the raw heif_context.
+// Errors are still thrown as heif::Error so the caller falls back to WIC as before.
+namespace {
+
+struct HeifContextDeleter { void operator()(heif_context* p) const { heif_context_free(p); } };
+struct HeifHandleDeleter { void operator()(heif_image_handle* p) const { heif_image_handle_release(p); } };
+struct HeifImageDeleter { void operator()(heif_image* p) const { heif_image_release(p); } };
+
+void ThrowOnError(const heif_error& err)
+{
+	if (err.code != heif_error_Ok)
+		throw heif::Error(err);
+}
+
+}
+
 void * HeifReader::ReadImage(int &width,
 					   int &height,
 					   int &nchannels,
@@ -22,21 +42,33 @@ void * HeifReader::ReadImage(int &width,
 	unsigned char* pPixelData = NULL;
 	exif_chunk = NULL;
 
-	heif::Context context;
-	context.read_from_memory_without_copy(buffer, sizebytes);
-	// タイルデコードの並列数は libheif の既定に任せる。
-	// libheif 1.23.1 で C++ ラッパの set_max_decoding_threads が削除されたため。
-	// コーデック（libde265）側の並列デコードはこの設定と独立して動作する。
-	frame_count = context.get_number_of_top_level_images();
-	heif_item_id item_id = context.get_list_of_top_level_image_IDs().at(frame_index);
-	heif::ImageHandle handle = context.get_image_handle(item_id);
-	// height = handle.get_height();
-	// width = handle.get_width();
-	heif::Image image = handle.decode_image(heif_colorspace_RGB, heif_chroma_interleaved_RGBA);
+	std::unique_ptr<heif_context, HeifContextDeleter> context(heif_context_alloc());
+	if (context == NULL) {
+		outOfMemory = true;
+		return NULL;
+	}
+	ThrowOnError(heif_context_read_from_memory_without_copy(context.get(), buffer, sizebytes, NULL));
+	// Parallel HEIC tile decoding: use the CPUCoresUsed INI setting like the AVIF decoder
+	heif_context_set_max_decoding_threads(context.get(), CSettingsProvider::This().NumberOfCoresToUse());
+	frame_count = heif_context_get_number_of_top_level_images(context.get());
+	std::vector<heif_item_id> item_ids(frame_count);
+	heif_context_get_list_of_top_level_image_IDs(context.get(), item_ids.data(), frame_count);
+	heif_item_id item_id = item_ids.at(frame_index);
+
+	heif_image_handle* raw_handle = NULL;
+	ThrowOnError(heif_context_get_image_handle(context.get(), item_id, &raw_handle));
+	std::unique_ptr<heif_image_handle, HeifHandleDeleter> handle(raw_handle);
+
+	heif_image* raw_image = NULL;
+	ThrowOnError(heif_decode_image(handle.get(), &raw_image, heif_colorspace_RGB, heif_chroma_interleaved_RGBA, NULL));
+	std::unique_ptr<heif_image, HeifImageDeleter> image(raw_image);
+
 	int stride;
-	uint8_t* data = image.get_plane(heif_channel_interleaved, &stride);
-	width = image.get_width(heif_channel_interleaved);
-	height = image.get_height(heif_channel_interleaved);
+	const uint8_t* data = heif_image_get_plane_readonly(image.get(), heif_channel_interleaved, &stride);
+	if (data == NULL)
+		return NULL;
+	width = heif_image_get_width(image.get(), heif_channel_interleaved);
+	height = heif_image_get_height(image.get(), heif_channel_interleaved);
 
 	if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION)
 		return NULL;
@@ -53,10 +85,12 @@ void * HeifReader::ReadImage(int &width,
 		outOfMemory = true;
 		return NULL;
 	}
-	std::vector<uint8_t> iccp = image.get_raw_color_profile();
+	std::vector<uint8_t> iccp(heif_image_get_raw_color_profile_size(image.get()));
+	if (!iccp.empty())
+		heif_image_get_raw_color_profile(image.get(), iccp.data());
 	void* transform = ICCProfileTransform::CreateTransform(iccp.data(), iccp.size(), ICCProfileTransform::FORMAT_RGBA);
 	size_t i, j;
-	if (!ICCProfileTransform::DoTransform(transform, data, pPixelData, width, height, stride=stride)) {
+	if (!ICCProfileTransform::DoTransform(transform, data, pPixelData, width, height, stride)) {
 		unsigned int* o = (unsigned int*)pPixelData;
 		for (i = 0; i < height; i++) {
 			unsigned int* p = (unsigned int*)(data + i * stride);
@@ -70,10 +104,10 @@ void * HeifReader::ReadImage(int &width,
 	}
 	ICCProfileTransform::DeleteTransform(transform);
 
-	std::vector<heif_item_id> exif_blocks = handle.get_list_of_metadata_block_IDs("Exif");
-
-	if (!exif_blocks.empty()) {
-		std::vector<uint8_t> exif = handle.get_metadata(exif_blocks[0]);
+	// Use only the first Exif block; a metadata read failure does not discard the decoded image
+	heif_item_id exif_id;
+	if (heif_image_handle_get_list_of_metadata_block_IDs(handle.get(), "Exif", &exif_id, 1) == 1) {
+		size_t exif_size = heif_image_handle_get_metadata_size(handle.get(), exif_id);
 		// 65538 magic number comes from investigations by qbnu
 		// see https://github.com/sylikc/jpegview/pull/213#pullrequestreview-1494451359 for more details
 		/*
@@ -89,16 +123,18 @@ void * HeifReader::ReadImage(int &width,
 
 		  If you want I can change it to 65536 + an offset and add notes explaining why.
 		*/
-		if (exif.size() > 8 && exif.size() < 65538) {
-			exif_chunk = malloc(exif.size());
-			if (exif_chunk != NULL) {
-				memcpy(exif_chunk, exif.data(), exif.size());
-				*((unsigned short*)exif_chunk) = _byteswap_ushort(0xFFE1);
-				*((unsigned short*)exif_chunk + 1) = _byteswap_ushort(exif.size() - 2);
+		if (exif_size > 8 && exif_size < 65538) {
+			std::vector<uint8_t> exif(exif_size);
+			if (heif_image_handle_get_metadata(handle.get(), exif_id, exif.data()).code == heif_error_Ok) {
+				exif_chunk = malloc(exif_size);
+				if (exif_chunk != NULL) {
+					memcpy(exif_chunk, exif.data(), exif_size);
+					*((unsigned short*)exif_chunk) = _byteswap_ushort(0xFFE1);
+					*((unsigned short*)exif_chunk + 1) = _byteswap_ushort(exif_size - 2);
+				}
 			}
 		}
 	}
 
 	return (void*)pPixelData;
 }
-
