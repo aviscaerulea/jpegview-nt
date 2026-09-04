@@ -485,6 +485,45 @@ void CImageLoadThread::DeleteCachedAvifDecoder() {
 #endif
 }
 
+// AABBGGRR ピクセル列のアルファ値を背景色へ乗算する
+// 10 万ピクセル以上は最大 8 スレッドのストリップ分割で並列処理する
+static void AlphaBlendBackgroundParallel(uint32* pImage32, int nTotalPixels) {
+	COLORREF bgColor = CSettingsProvider::This().ColorTransparency();
+
+	// ピクセル数が少ない場合はシングルスレッド処理
+	const int MIN_PIXELS_FOR_PARALLEL = 100000; // 10 万ピクセル未満はシングルスレッド
+	if (nTotalPixels < MIN_PIXELS_FOR_PARALLEL) {
+		for (int i = 0; i < nTotalPixels; i++)
+			pImage32[i] = Helpers::AlphaBlendBackground(pImage32[i], bgColor);
+		return;
+	}
+
+	// マルチスレッド並列処理
+	int nNumCores = CSettingsProvider::This().NumberOfCoresToUse();
+	int nThreads = min(nNumCores, 8); // 最大 8 スレッド
+
+	// ストリップ分割（各スレッドが処理するピクセル範囲）
+	int nPixelsPerThread = (nTotalPixels + nThreads - 1) / nThreads;
+
+	std::vector<std::thread> threads;
+	for (int t = 0; t < nThreads; t++) {
+		int startIdx = t * nPixelsPerThread;
+		int endIdx = min(startIdx + nPixelsPerThread, nTotalPixels);
+		if (startIdx >= nTotalPixels) break;
+
+		threads.emplace_back([pImage32, startIdx, endIdx, bgColor]() {
+			for (int i = startIdx; i < endIdx; i++) {
+				pImage32[i] = Helpers::AlphaBlendBackground(pImage32[i], bgColor);
+			}
+		});
+	}
+
+	// 全スレッドの完了を待機
+	for (auto& th : threads) {
+		th.join();
+	}
+}
+
 // 診断トレースログ（%TEMP%\jpegview-nt-trace.log に追記）
 static void TraceLog(const char* fmt, ...) {
 	char msg[512];
@@ -670,9 +709,7 @@ void CImageLoadThread::ProcessReadWEBPRequest(CRequest * request) {
 			uint8* pPixelData = (uint8*)WebpReaderWriter::ReadImage(nWidth, nHeight, nBPP, bHasAnimation, nFrameCount, nFrameTimeMs, pEXIFData, request->OutOfMemory, pBuffer, nFileSize);
 			if (pPixelData && nBPP == 4) {
 				// Multiply alpha value into each AABBGGRR pixel
-				uint32* pImage32 = (uint32*)pPixelData;
-				for (int i = 0; i < nWidth * nHeight; i++)
-					*pImage32++ = Helpers::AlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+				AlphaBlendBackgroundParallel((uint32*)pPixelData, nWidth * nHeight);
 
 				if (bHasAnimation) {
 					m_sLastWebpFileName = sFileName;
@@ -755,9 +792,7 @@ void CImageLoadThread::ProcessReadPNGRequest(CRequest* request) {
 				if (bHasAnimation)
 					m_sLastPngFileName = sFileName;
 				// Multiply alpha value into each AABBGGRR pixel
-				uint32* pImage32 = (uint32*)pPixelData;
-				for (int i = 0; i < nWidth * nHeight; i++)
-					*pImage32++ = Helpers::AlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+				AlphaBlendBackgroundParallel((uint32*)pPixelData, nWidth * nHeight);
 
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, 4, 0, IF_PNG, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
 			} else {
@@ -840,9 +875,7 @@ void CImageLoadThread::ProcessReadJXLRequest(CRequest* request) {
 				if (bHasAnimation)
 					m_sLastJxlFileName = sFileName;
 				// Multiply alpha value into each AABBGGRR pixel
-				uint32* pImage32 = (uint32*)pPixelData;
-				for (int i = 0; i < nWidth * nHeight; i++)
-					*pImage32++ = Helpers::AlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+				AlphaBlendBackgroundParallel((uint32*)pPixelData, nWidth * nHeight);
 
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, 4, 0, IF_JXL, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
 				free(pEXIFData);
@@ -918,9 +951,7 @@ void CImageLoadThread::ProcessReadAVIFRequest(CRequest* request) {
 				if (bHasAnimation)
 					m_sLastAvifFileName = sFileName;
 				// Multiply alpha value into each AABBGGRR pixel
-				uint32* pImage32 = (uint32*)pPixelData;
-				for (int i = 0; i < nWidth * nHeight; i++)
-					*pImage32++ = Helpers::AlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+				AlphaBlendBackgroundParallel((uint32*)pPixelData, nWidth * nHeight);
 
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, 4, 0, IF_AVIF, bHasAnimation, request->FrameIndex, nFrameCount, nFrameTimeMs);
 				free(pEXIFData);
@@ -979,42 +1010,8 @@ void CImageLoadThread::ProcessReadHEIFRequest(CRequest* request) {
 			void* pEXIFData;
 			uint8* pPixelData = (uint8*)HeifReader::ReadImage(nWidth, nHeight, nBPP, nFrameCount, pEXIFData, request->OutOfMemory, request->FrameIndex, pBuffer, nFileSize);
 			if (pPixelData != NULL) {
-				// Multiply alpha value into each AABBGGRR pixel (並列化)
-				uint32* pImage32 = (uint32*)pPixelData;
-				int nTotalPixels = nWidth * nHeight;
-				COLORREF bgColor = CSettingsProvider::This().ColorTransparency();
-
-				// ピクセル数が少ない場合はシングルスレッド処理
-				const int MIN_PIXELS_FOR_PARALLEL = 100000; // 10 万ピクセル未満はシングルスレッド
-				if (nTotalPixels < MIN_PIXELS_FOR_PARALLEL) {
-					for (int i = 0; i < nTotalPixels; i++)
-						pImage32[i] = Helpers::AlphaBlendBackground(pImage32[i], bgColor);
-				} else {
-					// マルチスレッド並列処理
-					int nNumCores = CSettingsProvider::This().NumberOfCoresToUse();
-					int nThreads = min(nNumCores, 8); // 最大 8 スレッド
-
-					// ストリップ分割（各スレッドが処理するピクセル範囲）
-					int nPixelsPerThread = (nTotalPixels + nThreads - 1) / nThreads;
-
-					std::vector<std::thread> threads;
-					for (int t = 0; t < nThreads; t++) {
-						int startIdx = t * nPixelsPerThread;
-						int endIdx = min(startIdx + nPixelsPerThread, nTotalPixels);
-						if (startIdx >= nTotalPixels) break;
-
-						threads.emplace_back([pImage32, startIdx, endIdx, bgColor]() {
-							for (int i = startIdx; i < endIdx; i++) {
-								pImage32[i] = Helpers::AlphaBlendBackground(pImage32[i], bgColor);
-							}
-						});
-					}
-
-					// 全スレッドの完了を待機
-					for (auto& th : threads) {
-						th.join();
-					}
-				}
+				// Multiply alpha value into each AABBGGRR pixel
+				AlphaBlendBackgroundParallel((uint32*)pPixelData, nWidth * nHeight);
 
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, pEXIFData, nBPP, 0, IF_HEIF, false, request->FrameIndex, nFrameCount, nFrameTimeMs);
 				free(pEXIFData);
@@ -1085,9 +1082,7 @@ void CImageLoadThread::ProcessReadQOIRequest(CRequest* request) {
 			if (pPixelData != NULL) {
 				if (nBPP == 4) {
 					// Multiply alpha value into each AABBGGRR pixel
-					uint32* pImage32 = (uint32*)pPixelData;
-					for (int i = 0; i < nWidth * nHeight; i++)
-						*pImage32++ = Helpers::AlphaBlendBackground(*pImage32, CSettingsProvider::This().ColorTransparency());
+					AlphaBlendBackgroundParallel((uint32*)pPixelData, nWidth * nHeight);
 				}
 				request->Image = new CJPEGImage(nWidth, nHeight, pPixelData, NULL, nBPP, 0, IF_QOI, false, 0, 1, 0);
 			}
