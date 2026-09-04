@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/github/license/aviscaerulea/jpegview-nt)](LICENSE)
 [![Build](https://github.com/aviscaerulea/jpegview-nt/actions/workflows/release.yml/badge.svg)](https://github.com/aviscaerulea/jpegview-nt/actions/workflows/release.yml)
 
-JPEGView-nt は、Windows 向けの軽量で高速な画像ビューアです。[sylikc/jpegview](https://github.com/sylikc/jpegview) の `v1.3.46.0` からフォークし、対応形式と表示速度を強化した個人カスタマイズ版です。HEIC/HEIF と SVG の表示に対応し、AVX2 命令とマルチスレッド処理によって大きな画像でも待たされずに閲覧できます。
+JPEGView-nt は、Windows 向けの軽量で高速な画像ビューアです。[sylikc/jpegview](https://github.com/sylikc/jpegview) の `v1.3.46.0` からフォークし、対応形式と表示速度を強化した個人カスタマイズ版です。HEIC/HEIF と SVG の表示に対応し、AVX2 命令とマルチスレッド処理によって大きな画像でも待たずに閲覧できます。
 
 ## 機能
 
@@ -48,7 +48,7 @@ JPEGView-nt は、Windows 向けの軽量で高速な画像ビューアです。
 
 #### リリースの ZIP から
 
-[リリースページ](https://github.com/aviscaerulea/jpegview-nt/releases/latest)から ZIP をダウンロードします。次に任意の場所へ展開します。展開したフォルダの `JPEGView.exe` をそのまま実行できます。
+[リリースページ](https://github.com/aviscaerulea/jpegview-nt/releases/latest) から ZIP をダウンロードします。次に任意の場所へ展開します。展開したフォルダの `JPEGView.exe` をそのまま実行できます。
 
 初期状態では設定を実行ファイルと同じフォルダへ保存するため、書き込みできない `Program Files` 配下には置かないでください。
 
