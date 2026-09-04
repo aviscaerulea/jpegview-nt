@@ -1,6 +1,17 @@
 @echo off
 
 setlocal
+REM meson decodes compiler output as UTF-8; on non-English locales cl.exe prints its help text
+REM in the OEM code page and meson crashes while detecting the compiler.
+REM chcp changes the console (not the process), so restore it on every exit path.
+for /f "tokens=2 delims=:" %%c in ('chcp') do set XORIG_CP=%%c
+chcp 65001 >nul
+call :MAIN
+set XRC=%ERRORLEVEL%
+chcp %XORIG_CP% >nul
+exit /b %XRC%
+
+:MAIN
 REM this builds libheif and replaces the libs in the JPEGView src folder
 REM it also builds libavif as both share the same dav1d libs
 
