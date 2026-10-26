@@ -38,6 +38,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | **zlib** | 1.3 | **1.3.1.2** | マイナー更新 |
 | **libwebp** | 1.3.2 | **1.6.0** | AVX2/SSE2 最適化追加 |
 | **libjxl** | 0.9-snapshot | **0.12.0** | CVE 4 件修正、デコード性能改善 |
+| **brotli**（libjxl 同梱） | 1.0.9 | **1.2.1** | CVE-2026-111497（復号時のバッファオーバーフロー）修正 |
 | **libheif** | 1.19.8 | **1.23.3** | CVE 修正多数（1.23.2〜1.23.3 で critical 3 件を含む）、unci 読み込み高速化 |
 | **libde265** | 1.0.16 | **1.1.2** | CVE 8 件修正、x86 デコード約 8% 高速化、民生機 HEIF の VUI 不正値で SPS を拒否する回帰を修正 |
 | **libavif** | 1.3.0 | **1.4.2** | 堅牢性修正、16bit AVIF 対応 |
@@ -58,6 +59,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **命令セット**: Release|x64 で `/arch:AVX2` 有効
 
 サードパーティライブラリの再ビルドが必要な場合は `extras/scripts/build-*.bat` を使用する。NASM、CMake、Python、meson、ninja が必要。
+
+**libjxl を再ビルドする前に、同梱の brotli を `v1.2.1` へ checkout すること。** libjxl `v0.12.0` の submodule 定義は brotli `v1.2.0`（CVE-2026-111497 の影響を受けるバージョン）を指すため、`git submodule update --recursive` を実行すると brotli が影響を受けるバージョンに戻る。`build-libjxl.bat` は brotli のバージョンを切り替えない。
+
+```bash
+git -C extras/third_party/libjxl/third_party/brotli fetch origin tag v1.2.1 --no-tags
+git -C extras/third_party/libjxl/third_party/brotli checkout v1.2.1
+```
+
+この checkout で親リポジトリの libjxl submodule に変更が出るが、libjxl submodule は上流 libjxl のコミットを指し brotli の変更を記録できないため、コミットしない（コミットするのは再ビルドした DLL だけ）。
 
 **重要**: ビルドコマンドは**必ずソリューションファイル（`src/JPEGView.sln`）を指定**すること。プロジェクトファイル（`src/JPEGView/JPEGView.vcxproj`）を直接ビルドすると、`$(SolutionDir)` マクロが正しく展開されず、ポストビルドイベントで「指定されたパスが見つかりません」エラーが発生する。
 
